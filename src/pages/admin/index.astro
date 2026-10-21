@@ -67,7 +67,171 @@ const [
     .order('schedule_ist', { ascending: true }),
 ]);
 
-const slots = (slotsData as Slot[]) || [];
+const DEFAULT_SLOTS: Slot[] = [
+  {
+    id: '1',
+    slot_key: 'rashifal',
+    name: 'दैनिक राशिफल (सभी 12 राशियां)',
+    schedule_ist: '05:00',
+    description: 'सभी 12 राशियों का दैनिक राशिफल व उपाय',
+    is_active: true,
+    last_run_at: null,
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: '2',
+    slot_key: 'panchang_choghadiya',
+    name: 'आज का पंचांग व चौघड़िया',
+    schedule_ist: '05:20',
+    description: 'तिथि, नक्षत्र, शुभ मुहूर्त, चौघड़िया व राहुकाल',
+    is_active: true,
+    last_run_at: null,
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: '3',
+    slot_key: 'weather_districtwise',
+    name: 'हरियाणा जिलावार मौसम',
+    schedule_ist: '05:40',
+    description: 'Open-Meteo आधारित हरियाणा के प्रमुख जिलों का मौसम',
+    is_active: true,
+    last_run_at: null,
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: '4',
+    slot_key: 'today_in_history',
+    name: 'आज का इतिहास',
+    schedule_ist: '06:00',
+    description: 'आज की तारीख में घटी देश-विदेश की ऐतिहासिक घटनाएं',
+    is_active: true,
+    last_run_at: null,
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: '5',
+    slot_key: 'gold_silver',
+    name: 'सोना चांदी के भाव',
+    schedule_ist: '06:20',
+    description: 'हरियाणा में 22K व 24K सोने और चांदी के ताज़ा दाम',
+    is_active: true,
+    last_run_at: null,
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: '6',
+    slot_key: 'petrol_diesel_lpg',
+    name: 'पेट्रोल, डीजल व एलपीजी दाम',
+    schedule_ist: '06:40',
+    description: 'हरियाणा के प्रमुख शहरों में ईंधन व गैस सिलेंडर के रेट',
+    is_active: true,
+    last_run_at: null,
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: '7',
+    slot_key: 'share_market',
+    name: 'शेयर बाजार ओपनिंग संकेत',
+    schedule_ist: '07:00',
+    description: 'सेंसेक्स, निफ्टी व प्रमुख स्टॉक्स के संकेत',
+    is_active: true,
+    last_run_at: null,
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: '8',
+    slot_key: 'govt_schemes',
+    name: 'सरकारी योजनाएं',
+    schedule_ist: '10:00',
+    description: 'हरियाणा सरकार व केंद्र की नई योजनाएं, आवेदन प्रक्रिया',
+    is_active: true,
+    last_run_at: null,
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: '9',
+    slot_key: 'govt_jobs',
+    name: 'सरकारी नौकरी व परिणाम',
+    schedule_ist: '12:00',
+    description: 'HSSC, पुलिस भर्ती, एडमिट कार्ड, परीक्षा तारीखें',
+    is_active: true,
+    last_run_at: null,
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: '10',
+    slot_key: 'train_bus_tech',
+    name: 'रेलवे, रोडवेज व टेक',
+    schedule_ist: '15:00',
+    description: 'ट्रेनों के समय में बदलाव, हरियाणा रोडवेज व टेक अपडेट',
+    is_active: true,
+    last_run_at: null,
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: '11',
+    slot_key: 'mandi_bhav',
+    name: 'हरियाणा मंडी भाव',
+    schedule_ist: '17:00',
+    description: 'सिरसा, आदमपुर, ऐलनाबाद, नोहर, फतेहाबाद मंडियों के शाम के भाव',
+    is_active: true,
+    last_run_at: null,
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: '12',
+    slot_key: 'cricket_sports',
+    name: 'क्रिकेट व खेल समाचार',
+    schedule_ist: '18:30',
+    description: 'लाइव मैच स्कोर, आईपीएल/टीम इंडिया व हरियाणा के खिलाड़ी',
+    is_active: true,
+    last_run_at: null,
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: '13',
+    slot_key: 'top10_news',
+    name: 'आज की 10 बड़ी खबरें',
+    schedule_ist: '21:00',
+    description: 'दिनभर की सबसे महत्वपूर्ण 10 खबरों का संक्षिप्त बुलेटिन',
+    is_active: true,
+    last_run_at: null,
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: '14',
+    slot_key: 'google_trends_india',
+    name: 'गूगल ट्रेंड्स वायरल न्यूज',
+    schedule_ist: '22:00',
+    description: 'भारत व हरियाणा में सबसे ज्यादा सर्च किए जाने वाले ट्रेंडिंग विषय',
+    is_active: true,
+    last_run_at: null,
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: '15',
+    slot_key: 'regional_coverage',
+    name: 'क्षेत्रीय समाचार कवरेज',
+    schedule_ist: '22:30',
+    description: 'सिरसा, आदमपुर, ऐलनाबाद, नोहर, भादरा, फतेहाबाद, हिसार लोकल कवरेज',
+    is_active: true,
+    last_run_at: null,
+    created_at: new Date().toISOString(),
+  },
+];
+
+let slots = (slotsData as Slot[]) || [];
+
+if (slots.length === 0) {
+  slots = DEFAULT_SLOTS;
+  // Automatically seed the database table so it is saved permanently
+  try {
+    const seedRows = DEFAULT_SLOTS.map(({ id, created_at, ...rest }) => rest);
+    await (supabase.from('slots') as any).upsert(seedRows, { onConflict: 'slot_key' });
+  } catch (e) {
+    console.warn('Auto-seed slots warning:', e);
+  }
+}
 ---
 
 <AdminLayout title="डैशबोर्ड व स्लॉट नियंत्रण" activeNav="dashboard">
