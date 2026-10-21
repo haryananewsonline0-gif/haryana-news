@@ -5,7 +5,8 @@
 // ==============================================================================
 
 import type { APIRoute } from 'astro';
-import { getServerSupabase } from '@/lib/supabase/server';
+import { createClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/database';
 
 export const prerender = false;
 
@@ -20,10 +21,35 @@ export const POST: APIRoute = async ({ cookies, locals }) => {
     });
   }
 
+  const supabaseUrl =
+    runtimeEnv?.SUPABASE_URL ||
+    runtimeEnv?.PUBLIC_SUPABASE_URL ||
+    import.meta.env.SUPABASE_URL ||
+    import.meta.env.PUBLIC_SUPABASE_URL ||
+    '';
+
+  const supabaseAnonKey =
+    runtimeEnv?.SUPABASE_ANON_KEY ||
+    runtimeEnv?.PUBLIC_SUPABASE_ANON_KEY ||
+    import.meta.env.SUPABASE_ANON_KEY ||
+    import.meta.env.PUBLIC_SUPABASE_ANON_KEY ||
+    '';
+
   try {
-    const supabase = getServerSupabase(runtimeEnv);
+    const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      },
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    });
+
     // Set user session with access token
-    const { data: userData, error: userError } = await supabase.auth.getUser(accessToken);
+    const { data: userData, error: userError } = await supabase.auth.getUser();
     if (userError || !userData.user) {
       return new Response(JSON.stringify({ success: false, error: 'अमान्य सत्र' }), {
         status: 401,

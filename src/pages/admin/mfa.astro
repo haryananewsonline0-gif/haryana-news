@@ -5,6 +5,7 @@
 // ==============================================================================
 
 import '@/styles/global.css';
+import { createClient } from '@supabase/supabase-js';
 import { verifyAdminSession } from '@/lib/auth/session';
 
 export const prerender = false;
@@ -18,6 +19,37 @@ if (!session.isAuthenticated || !session.isAdmin) {
 
 if (session.isMfaVerified) {
   return Astro.redirect('/admin');
+}
+
+const isDev = import.meta.env.DEV;
+let isEnrolled = false;
+
+// Check if user has enrolled 2FA factor
+const accessToken = Astro.cookies.get('sb-access-token')?.value;
+if (accessToken) {
+  const supabaseUrl =
+    runtimeEnv?.SUPABASE_URL ||
+    runtimeEnv?.PUBLIC_SUPABASE_URL ||
+    import.meta.env.SUPABASE_URL ||
+    import.meta.env.PUBLIC_SUPABASE_URL ||
+    '';
+  const supabaseAnonKey =
+    runtimeEnv?.SUPABASE_ANON_KEY ||
+    runtimeEnv?.PUBLIC_SUPABASE_ANON_KEY ||
+    import.meta.env.SUPABASE_ANON_KEY ||
+    import.meta.env.PUBLIC_SUPABASE_ANON_KEY ||
+    '';
+
+  try {
+    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: `Bearer ${accessToken}` } },
+      auth: { persistSession: false },
+    });
+    const { data: factors } = await supabaseClient.auth.mfa.listFactors();
+    isEnrolled = factors?.totp?.some((f) => f.status === 'verified') || false;
+  } catch (e) {
+    // Continue to standard MFA prompt if check fails
+  }
 }
 ---
 
@@ -52,6 +84,12 @@ if (session.isMfaVerified) {
 
       <!-- Card -->
       <div class="bg-slate-800/80 backdrop-blur-xl border border-slate-700/60 rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
+        {isDev && (
+          <div class="mb-5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs leading-relaxed text-center">
+            💡 <strong>लोकल टेस्टिंग:</strong> आप कोड <code class="px-1.5 py-0.5 bg-slate-900 rounded font-mono font-bold text-white">000000</code> दर्ज करके सीधे डैशबोर्ड खोल सकते हैं, या नीचे दिए लिंक से <strong>Google Authenticator</strong> में QR कोड जोड़ सकते हैं।
+          </div>
+        )}
+
         <form id="mfa-verify-form" class="space-y-6">
           <!-- Alert Box -->
           <div id="error-alert" class="hidden p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-start gap-2">

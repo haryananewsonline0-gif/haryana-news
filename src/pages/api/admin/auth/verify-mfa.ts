@@ -47,6 +47,25 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
       );
     }
 
+    // Dev mode testing bypass (only active during local development)
+    if (import.meta.env.DEV && (code === '000000' || code === '123456')) {
+      cookies.set('admin-mfa-verified', 'true', {
+        path: '/',
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 8, // 8 hours
+      });
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          redirect: '/admin',
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Client authenticated with the user's access token
     const client = createClient<Database>(supabaseUrl, supabaseAnonKey, {
       global: {
