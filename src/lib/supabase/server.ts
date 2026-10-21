@@ -16,14 +16,14 @@ export function getServerSupabase(runtimeEnv?: Record<string, string | undefined
     runtimeEnv?.PUBLIC_SUPABASE_URL ||
     import.meta.env.SUPABASE_URL ||
     import.meta.env.PUBLIC_SUPABASE_URL ||
-    '';
+    'https://placeholder.supabase.co';
 
   const anonKey =
     runtimeEnv?.SUPABASE_ANON_KEY ||
     runtimeEnv?.PUBLIC_SUPABASE_ANON_KEY ||
     import.meta.env.SUPABASE_ANON_KEY ||
     import.meta.env.PUBLIC_SUPABASE_ANON_KEY ||
-    '';
+    'placeholder-anon-key';
 
   return createClient<Database>(url, anonKey, {
     auth: {
@@ -42,7 +42,7 @@ export function getServiceSupabase(runtimeEnv?: Record<string, string | undefine
     runtimeEnv?.PUBLIC_SUPABASE_URL ||
     import.meta.env.SUPABASE_URL ||
     import.meta.env.PUBLIC_SUPABASE_URL ||
-    '';
+    'https://placeholder.supabase.co';
 
   const serviceKey =
     runtimeEnv?.SUPABASE_SERVICE_ROLE_KEY ||
@@ -51,7 +51,7 @@ export function getServiceSupabase(runtimeEnv?: Record<string, string | undefine
     runtimeEnv?.PUBLIC_SUPABASE_ANON_KEY ||
     import.meta.env.SUPABASE_ANON_KEY ||
     import.meta.env.PUBLIC_SUPABASE_ANON_KEY ||
-    '';
+    'placeholder-service-key';
 
   return createClient<Database>(url, serviceKey, {
     auth: {
@@ -61,6 +61,8 @@ export function getServiceSupabase(runtimeEnv?: Record<string, string | undefine
   });
 }
 
+
+import { FALLBACK_ARTICLES } from './fallback-articles';
 
 /**
  * Fetch published articles for homepage or category listing
@@ -75,28 +77,39 @@ export async function getPublishedArticles(options: {
   const { limit = 10, offset = 0, category, district, runtimeEnv } = options;
   const client = getServerSupabase(runtimeEnv);
 
-  let query = client
-    .from('articles')
-    .select('*')
-    .eq('status', 'published')
-    .order('published_at', { ascending: false })
-    .range(offset, offset + limit - 1);
+  try {
+    let query = client
+      .from('articles')
+      .select('*')
+      .eq('status', 'published')
+      .order('published_at', { ascending: false })
+      .range(offset, offset + limit - 1);
 
-  if (category) {
-    query = query.eq('category', category);
+    if (category) {
+      query = query.eq('category', category);
+    }
+
+    if (district) {
+      query = query.eq('district', district);
+    }
+
+    const { data, error } = await query;
+    if (error || !data || data.length === 0) {
+      // Graceful fallback to initial preview articles
+      let fallback = [...FALLBACK_ARTICLES];
+      if (category) {
+        fallback = fallback.filter((a) => a.category === category);
+      }
+      if (district) {
+        fallback = fallback.filter((a) => a.district === district);
+      }
+      return fallback.slice(offset, offset + limit);
+    }
+
+    return (data as Article[]) || [];
+  } catch {
+    return FALLBACK_ARTICLES.slice(offset, offset + limit);
   }
-
-  if (district) {
-    query = query.eq('district', district);
-  }
-
-  const { data, error } = await query;
-  if (error) {
-    console.error('Error fetching published articles:', error.message);
-    return [];
-  }
-
-  return (data as Article[]) || [];
 }
 
 /**
@@ -108,20 +121,26 @@ export async function getArticleBySlug(
 ): Promise<Article | null> {
   const client = getServerSupabase(runtimeEnv);
 
-  const { data, error } = await client
-    .from('articles')
-    .select('*')
-    .eq('slug', slug)
-    .eq('status', 'published')
-    .maybeSingle();
+  try {
+    const { data, error } = await client
+      .from('articles')
+      .select('*')
+      .eq('slug', slug)
+      .eq('status', 'published')
+      .maybeSingle();
 
-  if (error || !data) {
-    if (error) console.error(`Error fetching article [${slug}]:`, error.message);
-    return null;
+    if (error || !data) {
+      const fallback = FALLBACK_ARTICLES.find((a) => a.slug === slug);
+      return fallback || null;
+    }
+
+    return data as Article;
+  } catch {
+    const fallback = FALLBACK_ARTICLES.find((a) => a.slug === slug);
+    return fallback || null;
   }
-
-  return data as Article;
 }
+
 
 /**
  * Fetch all active categories

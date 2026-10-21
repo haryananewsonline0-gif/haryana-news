@@ -12,14 +12,15 @@ if (!supabaseUrl && typeof window !== 'undefined') {
   console.warn('PUBLIC_SUPABASE_URL is missing. Please set it in your environment.');
 }
 
-/**
- * Public browser-safe Supabase client.
- * Strictly adheres to Row Level Security (RLS).
- */
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-  },
-});
+export const supabase = createClient<Database>(
+  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseAnonKey || 'placeholder-anon-key',
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+    },
+  }
+);
+
