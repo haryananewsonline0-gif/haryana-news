@@ -1,109 +1,215 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import { getPublishedArticles } from '@/lib/supabase/server';
+import ArticleCard from '@/components/ArticleCard.astro';
+import BreakingTicker from '@/components/BreakingTicker.astro';
+import { getPublishedArticles, getManualDataByKey } from '@/lib/supabase/server';
+import { HARYANA_DISTRICTS } from '@/constants/districts';
 
-export const prerender = false; // SSR
+export const prerender = false; // Cloudflare Pages SSR
 
 const runtimeEnv = Astro.locals?.runtime?.env;
-const latestArticles = await getPublishedArticles({
-  limit: 10,
+
+// Fetch latest articles for homepage
+const allArticles = await getPublishedArticles({
+  limit: 20,
   runtimeEnv,
 });
+
+// Fetch rates from manual_data fallback
+const goldRates = await getManualDataByKey<{
+  gold_24k_10g?: number;
+  silver_1kg?: number;
+}>('gold_silver', runtimeEnv);
+
+const fuelRates = await getManualDataByKey<{
+  petrol_per_litre?: number;
+  diesel_per_litre?: number;
+}>('fuel_rates', runtimeEnv);
+
+const featuredArticle = allArticles[0];
+const secondaryFeatured = allArticles.slice(1, 3);
+const latestGrid = allArticles.slice(3, 9);
+const regionalArticles = allArticles.filter((a) => a.district || a.category === 'regional').slice(0, 4);
+
+const priorityDistricts = HARYANA_DISTRICTS.filter((d) => d.isPriorityRegion);
 ---
 
 <BaseLayout
-  title="हरियाणा न्यूज़ | haryananews.online — ब्रेकिंग व ताज़ा समाचार"
-  description="हरियाणा, सिरसा, फतेहाबाद, हिसार मंडी भाव, मौसम, सरकारी योजनाएं व खेल की ताज़ा खबरें।"
+  title="हरियाणा न्यूज़ | haryananews.online — हरियाणा की ताज़ा व निष्पक्ष खबरें"
+  description="हरियाणा, सिरसा, फतेहाबाद, हिसार, मंडी भाव, मौसम, सरकारी योजनाएं, खेल व राजनीति की सबसे तेज और सटीक खबरें।"
 >
-  <!-- Breaking News Ticker Skeleton -->
-  <div class="mb-6 bg-white border-l-4 border-saffron rounded-r-lg shadow-sm p-3 flex items-center gap-3">
-    <span class="bg-saffron text-white text-xs font-bold px-2 py-1 rounded">
-      ब्रेकिंग न्यूज़
-    </span>
-    <p class="text-xs sm:text-sm text-zinc-700 font-medium truncate">
-      हरियाणा न्यूज़ पोर्टल पर आपका स्वागत है — निष्पक्ष और सटीक खबरें सीधे आप तक।
-    </p>
-  </div>
+  <div class="space-y-6">
+    <!-- 1. Breaking News Ticker -->
+    <BreakingTicker articles={allArticles} />
 
-  <!-- Hero Welcome / Showcase Banner -->
-  <section class="bg-gradient-to-r from-saffron/10 via-amber-50 to-deepgreen/10 border border-saffron/20 rounded-2xl p-6 sm:p-8 mb-8 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-6 shadow-sm">
-    <div class="space-y-2 max-w-xl">
-      <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-deepgreen/10 text-deepgreen text-xs font-bold">
-        <span>✓ haryananews.online</span>
-      </div>
-      <h1 class="text-2xl sm:text-4xl font-extrabold text-zinc-950 tracking-tight leading-tight">
-        हरियाणा की हर खबर, <span class="text-saffron">सबसे तेज़</span> और <span class="text-deepgreen">सटीक</span>
-      </h1>
-      <p class="text-sm text-zinc-600 leading-relaxed">
-        सिरसा, फतेहाबाद, हिसार, आदमपुर, ऐलनाबाद, नोहर सहित पूरे हरियाणा की राजनीति, मंडी भाव, मौसम पूर्वानुमान और सरकारी योजनाओं की विश्वसनीय कवरेज।
-      </p>
-    </div>
-
-    <!-- Quick Stats Cards -->
-    <div class="grid grid-cols-2 gap-3 w-full sm:w-auto text-left">
-      <a href="/category/mandi-bhav" class="bg-white p-3 rounded-xl border border-zinc-200/80 hover:border-saffron shadow-xs transition-colors">
-        <span class="text-[11px] text-zinc-500 block">आज के भाव</span>
-        <strong class="text-sm text-zinc-900 block font-bold">मंडी भाव अपडेट</strong>
-      </a>
-      <a href="/category/weather" class="bg-white p-3 rounded-xl border border-zinc-200/80 hover:border-deepgreen shadow-xs transition-colors">
-        <span class="text-[11px] text-zinc-500 block">Open-Meteo</span>
-        <strong class="text-sm text-zinc-900 block font-bold">जिलावार मौसम</strong>
-      </a>
-      <a href="/category/panchang" class="bg-white p-3 rounded-xl border border-zinc-200/80 hover:border-saffron shadow-xs transition-colors">
-        <span class="text-[11px] text-zinc-500 block">दैनिक पंचांग</span>
-        <strong class="text-sm text-zinc-900 block font-bold">राशिफल व मुहूर्त</strong>
-      </a>
-      <a href="/category/govt-jobs" class="bg-white p-3 rounded-xl border border-zinc-200/80 hover:border-deepgreen shadow-xs transition-colors">
-        <span class="text-[11px] text-zinc-500 block">HSSC / पुलिस</span>
-        <strong class="text-sm text-zinc-900 block font-bold">सरकारी भर्तियां</strong>
-      </a>
-    </div>
-  </section>
-
-  <!-- News Stream Section -->
-  <section class="space-y-4">
-    <div class="flex items-center justify-between border-b-2 border-zinc-200 pb-2">
-      <h2 class="text-xl font-bold text-zinc-950 flex items-center gap-2">
-        <span class="w-2.5 h-2.5 rounded-full bg-saffron"></span>
-        ताज़ा खबरें
-      </h2>
-      <span class="text-xs text-zinc-500">24x7 ऑटो अपडेट</span>
-    </div>
-
-    {latestArticles.length === 0 ? (
-      <div class="bg-white rounded-xl border border-zinc-200 p-12 text-center space-y-3">
-        <div class="w-12 h-12 mx-auto rounded-full bg-saffron/10 flex items-center justify-center text-saffron">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-          </svg>
+    <!-- 2. Fast Market & Weather Rates Strip -->
+    <div class="bg-white border border-zinc-200/80 rounded-xl p-2.5 px-4 shadow-xs overflow-x-auto scrollbar-none flex items-center justify-between gap-6 text-xs whitespace-nowrap">
+      <div class="flex items-center gap-6 divide-x divide-zinc-200">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+          <span class="font-bold text-zinc-900">सोना (24K):</span>
+          <span class="font-bold text-amber-700">₹{goldRates?.gold_24k_10g?.toLocaleString('en-IN') || '89,500'} /10g</span>
         </div>
-        <h3 class="text-base font-bold text-zinc-800">समाचार फीड तैयार हो रही है</h3>
-        <p class="text-xs text-zinc-500 max-w-md mx-auto leading-relaxed">
-          ऑटोमेशन पाइपलाइन और सुपबेस माइग्रेशन सेटअप पूर्ण होने के पश्चात शेड्यूल के अनुसार समाचार प्रकाशित होंगे।
-        </p>
+        <div class="pl-6 flex items-center gap-2">
+          <span class="font-bold text-zinc-900">चांदी (1kg):</span>
+          <span class="font-bold text-zinc-700">₹{goldRates?.silver_1kg?.toLocaleString('en-IN') || '1,01,000'}</span>
+        </div>
+        <div class="pl-6 flex items-center gap-2">
+          <span class="font-bold text-zinc-900">पेट्रोल:</span>
+          <span class="font-bold text-blue-700">₹{fuelRates?.petrol_per_litre || '95.34'}/L</span>
+        </div>
+        <div class="pl-6 flex items-center gap-2">
+          <span class="font-bold text-zinc-900">डीजल:</span>
+          <span class="font-bold text-blue-700">₹{fuelRates?.diesel_per_litre || '88.19'}/L</span>
+        </div>
       </div>
-    ) : (
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {latestArticles.map((article) => (
-          <article class="bg-white rounded-xl border border-zinc-200 overflow-hidden shadow-xs hover:shadow-md transition-shadow">
-            <img
-              src={article.thumbnail_url}
-              alt={article.image_alt || article.title}
-              class="w-full h-48 object-cover"
-              loading="lazy"
-            />
-            <div class="p-4 space-y-2">
-              <span class="text-[11px] font-bold text-saffron uppercase tracking-wider">{article.category}</span>
-              <h3 class="text-base font-bold text-zinc-900 leading-snug line-clamp-2">
-                <a href={`/news/${article.slug}`} class="hover:text-saffron transition-colors">
-                  {article.title}
-                </a>
-              </h3>
-              <p class="text-xs text-zinc-600 line-clamp-2">{article.summary}</p>
+      <div class="flex items-center gap-2 text-deepgreen font-bold">
+        <span>🌾 सिरसा मंडी भाव:</span>
+        <a href="/category/mandi-bhav" class="hover:underline">ताजा रेट्स देखें →</a>
+      </div>
+    </div>
+
+    {/* 3. Top Stories Section (Featured Grid) */}
+    {featuredArticle && (
+      <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2">
+          <ArticleCard article={featuredArticle} variant="featured" priorityImage={true} />
+        </div>
+
+        <div class="space-y-4 flex flex-col justify-between">
+          <div class="bg-white rounded-2xl border border-zinc-200/90 p-4 shadow-xs">
+            <h3 class="text-sm font-extrabold text-zinc-900 uppercase tracking-wider mb-3 flex items-center gap-2 pb-2 border-b border-zinc-100">
+              <span class="w-2.5 h-2.5 rounded-full bg-saffron"></span>
+              खास खबरें
+            </h3>
+            <div class="space-y-3">
+              {secondaryFeatured.map((article) => (
+                <ArticleCard article={article} variant="compact" />
+              ))}
             </div>
-          </article>
-        ))}
-      </div>
+          </div>
+
+          <div class="bg-gradient-to-br from-saffron/10 via-amber-50 to-deepgreen/10 border border-saffron/20 rounded-2xl p-4">
+            <h4 class="text-xs font-bold text-zinc-900 uppercase tracking-wider mb-2">
+              📍 आपका जिला चुनें
+            </h4>
+            <div class="flex flex-wrap gap-1.5">
+              {priorityDistricts.map((d) => (
+                <a
+                  href={`/district/${d.slug}`}
+                  class="px-2.5 py-1 bg-white hover:bg-saffron hover:text-white rounded-lg text-xs font-semibold text-zinc-700 border border-zinc-200/80 transition-colors shadow-xs"
+                >
+                  {d.nameHi}
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
     )}
-  </section>
+
+    {!featuredArticle && (
+      <section class="bg-white rounded-2xl border border-zinc-200 p-8 sm:p-12 text-center space-y-4">
+        <div class="w-16 h-16 mx-auto rounded-full bg-saffron/10 flex items-center justify-center text-saffron text-2xl font-black">
+          ह
+        </div>
+        <div class="space-y-2 max-w-xl mx-auto">
+          <h2 class="text-2xl font-extrabold text-zinc-950">हरियाणा न्यूज़ पोर्टल पर आपका स्वागत है</h2>
+          <p class="text-sm text-zinc-600 leading-relaxed">
+            हमारा ऑटोमेशन इंजन और 15-स्लॉट पब्लिशिंग टाइमटेबल (मंडी भाव, मौसम, राशिफल, सरकारी नौकरी, खेल व क्षेत्रीय कवरेज) तैयार है।
+          </p>
+        </div>
+        <div class="flex flex-wrap justify-center gap-3 pt-2">
+          <a href="/category/mandi-bhav" class="px-4 py-2 bg-saffron text-white rounded-xl text-xs font-bold hover:bg-amber-600 transition-colors">
+            मंडी भाव देखें
+          </a>
+          <a href="/category/weather" class="px-4 py-2 bg-deepgreen text-white rounded-xl text-xs font-bold hover:bg-deepgreen-600 transition-colors">
+            मौसम पूर्वानुमान
+          </a>
+        </div>
+      </section>
+    )}
+
+    <!-- 4. Latest News Grid -->
+    {latestGrid.length > 0 && (
+      <section class="space-y-4 pt-4">
+        <div class="flex items-center justify-between border-b-2 border-zinc-200 pb-2">
+          <h2 class="text-xl font-extrabold text-zinc-950 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-deepgreen"></span>
+            ताज़ा समाचार
+          </h2>
+          <a href="/category/haryana" class="text-xs font-bold text-saffron hover:text-amber-600">
+            सभी देखें →
+          </a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {latestGrid.map((article) => (
+            <ArticleCard article={article} variant="standard" />
+          ))}
+        </div>
+      </section>
+    )}
+
+    <!-- 5. Regional Coverage Section (Sirsa, Fatehabad, Hisar, Adampur, Ellenabad, Nohar, Bhadra) -->
+    <section class="bg-white rounded-2xl border border-zinc-200/90 p-6 shadow-xs space-y-4">
+      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-100 pb-3">
+        <div>
+          <h2 class="text-lg font-extrabold text-zinc-950 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-saffron"></span>
+            क्षेत्रीय समाचार (सिरसा, आदमपुर, ऐलनाबाद, नोहर, हिसार)
+          </h2>
+          <p class="text-xs text-zinc-500">आपके शहर व गांव की जमीनी खबरें</p>
+        </div>
+        <div class="flex gap-2">
+          <a href="/district/sirsa" class="text-xs text-zinc-600 hover:text-saffron font-medium">#सिरसा</a>
+          <a href="/district/hisar" class="text-xs text-zinc-600 hover:text-saffron font-medium">#हिसार</a>
+          <a href="/district/fatehabad" class="text-xs text-zinc-600 hover:text-saffron font-medium">#फतेहाबाद</a>
+        </div>
+      </div>
+
+      {regionalArticles.length > 0 ? (
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {regionalArticles.map((article) => (
+            <ArticleCard article={article} variant="horizontal" />
+          ))}
+        </div>
+      ) : (
+        <div class="py-6 text-center text-xs text-zinc-400">
+          क्षेत्रीय समाचार बुलेटिन हर 2 घंटे में अपडेट होता है।
+        </div>
+      )}
+    </section>
+
+    <!-- 6. Essential Services Quick Hub (Mandi, Weather, Panchang, Schemes) -->
+    <section class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="bg-gradient-to-br from-amber-500 to-amber-600 text-white p-5 rounded-2xl shadow-sm space-y-2">
+        <span class="text-2xl">🌾</span>
+        <h3 class="text-base font-bold">हरियाणा मंडी भाव</h3>
+        <p class="text-xs text-amber-100 leading-relaxed">सिरसा, आदमपुर, ऐलनाबाद, नोहर व फतेहाबाद मंडियों के शाम के ताज़ा भाव।</p>
+        <a href="/category/mandi-bhav" class="inline-block pt-1 text-xs font-black underline">भाव देखें →</a>
+      </div>
+
+      <div class="bg-gradient-to-br from-sky-500 to-blue-600 text-white p-5 rounded-2xl shadow-sm space-y-2">
+        <span class="text-2xl">🌦️</span>
+        <h3 class="text-base font-bold">जिलावार मौसम</h3>
+        <p class="text-xs text-sky-100 leading-relaxed">Open-Meteo आधारित हरियाणा के सभी 22 जिलों का सटीक पूर्वानुमान व बारिश अलर्ट।</p>
+        <a href="/category/weather" class="inline-block pt-1 text-xs font-black underline">मौसम देखें →</a>
+      </div>
+
+      <div class="bg-gradient-to-br from-emerald-600 to-green-700 text-white p-5 rounded-2xl shadow-sm space-y-2">
+        <span class="text-2xl">💼</span>
+        <h3 class="text-base font-bold">सरकारी नौकरियां</h3>
+        <p class="text-xs text-emerald-100 leading-relaxed">HSSC, हरियाणा पुलिस, सीईटी परिणाम, एडमिट कार्ड व नई रिक्तियां।</p>
+        <a href="/category/govt-jobs" class="inline-block pt-1 text-xs font-black underline">भर्तियां देखें →</a>
+      </div>
+
+      <div class="bg-gradient-to-br from-purple-600 to-indigo-700 text-white p-5 rounded-2xl shadow-sm space-y-2">
+        <span class="text-2xl">🕉️</span>
+        <h3 class="text-base font-bold">पंचांग व राशिफल</h3>
+        <p class="text-xs text-purple-100 leading-relaxed">दैनिक 12 राशियों का राशिफल, चौघड़िया, शुभ मुहूर्त व आज का राहुकाल।</p>
+        <a href="/category/panchang" class="inline-block pt-1 text-xs font-black underline">पंचांग पढ़ें →</a>
+      </div>
+    </section>
+  </div>
 </BaseLayout>

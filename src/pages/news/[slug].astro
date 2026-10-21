@@ -1,0 +1,271 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Breadcrumbs from '@/components/Breadcrumbs.astro';
+import ShareButtons from '@/components/ShareButtons.astro';
+import ArticleCard from '@/components/ArticleCard.astro';
+import { getArticleBySlug, getPublishedArticles } from '@/lib/supabase/server';
+import { getOptimizedImageUrl } from '@/utils/imagekit';
+import { sanitizeArticleHtml } from '@/utils/sanitize';
+
+export const prerender = false; // SSR dynamic route
+
+const { slug } = Astro.params;
+
+if (!slug) {
+  return Astro.redirect('/404');
+}
+
+const runtimeEnv = Astro.locals?.runtime?.env;
+const article = await getArticleBySlug(slug, runtimeEnv);
+
+if (!article) {
+  return new Response(null, {
+    status: 404,
+    statusText: 'Article Not Found',
+  });
+}
+
+// Fetch 3 related articles from same category
+const relatedArticles = (
+  await getPublishedArticles({
+    limit: 4,
+    category: article.category,
+    runtimeEnv,
+  })
+).filter((a) => a.id !== article.id).slice(0, 3);
+
+// Dates in IST Hindi
+const publishedDate = article.published_at ? new Date(article.published_at) : new Date(article.created_at);
+const formattedDate = new Intl.DateTimeFormat('hi-IN', {
+  timeZone: 'Asia/Kolkata',
+  weekday: 'long',
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: true,
+}).format(publishedDate);
+
+const pageUrl = Astro.url.href;
+const sanitizedBody = sanitizeArticleHtml(article.body_html);
+const fullImageUrl = getOptimizedImageUrl(article.thumbnail_url, {
+  width: 1200,
+  height: 630,
+  quality: 90,
+  format: 'webp',
+});
+
+// JSON-LD NewsArticle Schema for Google Search & Google News
+const newsArticleSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'NewsArticle',
+  headline: article.seo_title || article.title,
+  description: article.seo_description || article.summary,
+  image: [fullImageUrl],
+  datePublished: publishedDate.toISOString(),
+  dateModified: publishedDate.toISOString(),
+  author: [
+    {
+      '@type': 'Organization',
+      name: 'हरियाणा न्यूज़ डेस्क',
+      url: 'https://haryananews.online',
+    },
+  ],
+  publisher: {
+    '@type': 'NewsMediaOrganization',
+    name: 'हरियाणा न्यूज़',
+    url: 'https://haryananews.online',
+    logo: {
+      '@type': 'ImageObject',
+      url: 'https://haryananews.online/favicon.svg',
+      width: 60,
+      height: 60,
+    },
+  },
+  mainEntityOfPage: {
+    '@type': 'WebPage',
+    '@id': pageUrl,
+  },
+};
+---
+
+<BaseLayout
+  title={`${article.seo_title || article.title} | हरियाणा न्यूज़`}
+  description={article.seo_description || article.summary}
+  image={fullImageUrl}
+  canonicalUrl={pageUrl}
+  isArticle={true}
+  articleDate={publishedDate.toISOString()}
+>
+  <!-- NewsArticle JSON-LD Script -->
+  <script type="application/ld+json" set:html={JSON.stringify(newsArticleSchema)} />
+
+  <article class="max-w-4xl mx-auto space-y-6">
+    <!-- Breadcrumbs -->
+    <Breadcrumbs
+      items={[
+        { label: article.category, href: `/category/${article.category}` },
+        ...(article.district ? [{ label: article.district, href: `/district/${article.district.toLowerCase()}` }] : []),
+        { label: article.title },
+      ]}
+    />
+
+    <!-- Header & Headline -->
+    <header class="space-y-3">
+      <div class="flex flex-wrap items-center gap-2">
+        <a
+          href={`/category/${article.category}`}
+          class="bg-saffron text-white text-xs font-bold px-2.5 py-1 rounded-md uppercase tracking-wider hover:bg-amber-600 transition-colors"
+        >
+          {article.category}
+        </a>
+        {article.district && (
+          <a
+            href={`/district/${article.district.toLowerCase()}`}
+            class="bg-deepgreen text-white text-xs font-semibold px-2.5 py-1 rounded-md hover:bg-deepgreen-600 transition-colors"
+          >
+            📍 {article.district}
+          </a>
+        )}
+      </div>
+
+      <h1 class="text-2xl sm:text-4xl font-extrabold text-zinc-950 leading-tight tracking-tight">
+        {article.title}
+      </h1>
+
+      <p class="text-base sm:text-lg text-zinc-600 font-medium leading-relaxed border-l-4 border-saffron pl-3">
+        {article.summary}
+      </p>
+
+      <!-- Byline & IST Timestamp -->
+      <div class="flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-500 pt-2 border-t border-zinc-200">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-full bg-saffron/20 text-saffron font-bold flex items-center justify-center text-sm">
+            ह
+          </div>
+          <div>
+            <span class="font-bold text-zinc-900 block">{article.source_name || 'हरियाणा न्यूज़ डेस्क'}</span>
+            <span>प्रकाशित: {formattedDate} (IST)</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <span>👁 {article.views || 0} व्यूज</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Top Share Buttons -->
+    <ShareButtons title={article.title} url={pageUrl} />
+
+    <!-- Article Featured Image with Prompt Specified Caption -->
+    <figure class="relative rounded-2xl overflow-hidden border border-zinc-200 bg-zinc-100 shadow-sm">
+      <img
+        src={fullImageUrl}
+        alt={article.image_alt || article.title}
+        class="w-full aspect-[16/9] object-cover"
+        loading="eager"
+      />
+      <figcaption class="p-2.5 bg-zinc-900 text-zinc-300 text-xs text-center flex items-center justify-center gap-2">
+        <span class="inline-block w-2 h-2 rounded-full bg-saffron"></span>
+        <span>प्रतीकात्मक तस्वीर (AI)</span>
+      </figcaption>
+    </figure>
+
+    <!-- Article Body HTML -->
+    <div
+      class="article-body prose prose-lg prose-zinc max-w-none text-zinc-800 leading-relaxed space-y-4 py-2 font-normal"
+      set:html={sanitizedBody}
+    />
+
+    <!-- Tags List -->
+    {article.tags && article.tags.length > 0 && (
+      <div class="pt-4 border-t border-zinc-200 flex flex-wrap items-center gap-2">
+        <span class="text-xs font-bold text-zinc-500">टैग्स:</span>
+        {article.tags.map((tag) => (
+          <span class="px-2.5 py-1 bg-zinc-100 text-zinc-700 hover:bg-saffron/10 hover:text-saffron rounded-lg text-xs font-medium transition-colors">
+            #{tag}
+          </span>
+        ))}
+      </div>
+    )}
+
+    <!-- Source Attribution & Editorial Notice -->
+    <div class="p-4 rounded-xl bg-amber-50/60 border border-amber-200/80 text-xs text-zinc-700 space-y-1">
+      <p class="font-bold text-zinc-900">
+        स्रोत संदर्भ:{' '}
+        {article.source_url ? (
+          <a
+            href={article.source_url}
+            target="_blank"
+            rel="noopener noreferrer nofollow"
+            class="text-saffron hover:underline font-bold"
+          >
+            {article.source_name}
+          </a>
+        ) : (
+          <span>{article.source_name || 'हरियाणा न्यूज़ डेस्क'}</span>
+        )}
+      </p>
+      <p class="text-zinc-500">
+        यह समाचार पाठकों की जानकारी के लिए प्रकाशित किया गया है। किसी भी त्रुटि या शिकायत के लिए हमारे संपर्क पृष्ठ पर सूचित करें।
+      </p>
+    </div>
+
+    <!-- Bottom Share Buttons -->
+    <ShareButtons title={article.title} url={pageUrl} />
+
+    <!-- Related Articles -->
+    {relatedArticles.length > 0 && (
+      <section class="pt-8 border-t border-zinc-200 space-y-4">
+        <h3 class="text-xl font-extrabold text-zinc-950 flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-deepgreen"></span>
+          संबंधित खबरें
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {relatedArticles.map((rel) => (
+            <ArticleCard article={rel} variant="standard" />
+          ))}
+        </div>
+      </section>
+    )}
+  </article>
+</BaseLayout>
+
+<style is:global>
+  .article-body p {
+    font-size: 1.05rem;
+    line-height: 1.85;
+    margin-bottom: 1.25rem;
+    color: #27272a;
+  }
+  .article-body h2 {
+    font-size: 1.45rem;
+    font-weight: 800;
+    margin-top: 1.75rem;
+    margin-bottom: 0.75rem;
+    color: #09090b;
+    border-left: 4px solid #ff9933;
+    padding-left: 0.5rem;
+  }
+  .article-body h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: #18181b;
+  }
+  .article-body ul, .article-body ol {
+    margin-left: 1.5rem;
+    margin-bottom: 1.25rem;
+    list-style-type: disc;
+  }
+  .article-body li {
+    margin-bottom: 0.5rem;
+  }
+  .article-body strong {
+    font-weight: 700;
+    color: #09090b;
+  }
+</style>

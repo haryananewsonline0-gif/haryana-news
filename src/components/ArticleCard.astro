@@ -1,0 +1,205 @@
+---
+import type { Article } from '@/types/database';
+import { getOptimizedImageUrl } from '@/utils/imagekit';
+
+interface Props {
+  article: Article;
+  variant?: 'standard' | 'horizontal' | 'compact' | 'featured';
+  showSummary?: boolean;
+  priorityImage?: boolean;
+}
+
+const {
+  article,
+  variant = 'standard',
+  showSummary = true,
+  priorityImage = false,
+} = Astro.props;
+
+// Date formatting in IST Hindi
+const publishedDate = article.published_at ? new Date(article.published_at) : new Date(article.created_at);
+const timeAgo = formatTimeAgoHindi(publishedDate);
+
+function formatTimeAgoHindi(date: Date): string {
+  const diffMs = Date.now() - date.getTime();
+  const diffMinutes = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMinutes / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffMinutes < 5) return 'अभी-अभी';
+  if (diffMinutes < 60) return `${diffMinutes} मिनट पहले`;
+  if (diffHours < 24) return `${diffHours} घंटे पहले`;
+  if (diffDays === 1) return 'कल';
+  if (diffDays < 7) return `${diffDays} दिन पहले`;
+
+  return new Intl.DateTimeFormat('hi-IN', {
+    timeZone: 'Asia/Kolkata',
+    month: 'short',
+    day: 'numeric',
+  }).format(date);
+}
+
+const imageSrc = getOptimizedImageUrl(article.thumbnail_url, {
+  width: variant === 'featured' ? 800 : variant === 'compact' ? 240 : 450,
+  height: variant === 'featured' ? 450 : variant === 'compact' ? 160 : 260,
+  quality: 85,
+  format: 'webp',
+});
+---
+
+{variant === 'featured' ? (
+  <article class="group relative bg-white rounded-2xl border border-zinc-200/90 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col md:flex-row">
+    <!-- Featured Image -->
+    <div class="relative md:w-3/5 overflow-hidden aspect-[16/9] bg-zinc-100">
+      <img
+        src={imageSrc}
+        alt={article.image_alt || article.title}
+        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+        loading={priorityImage ? 'eager' : 'lazy'}
+      />
+      <div class="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-black/70 backdrop-blur-xs text-[10px] text-zinc-300">
+        प्रतीकात्मक तस्वीर (AI)
+      </div>
+      <div class="absolute top-3 left-3 flex gap-2">
+        <span class="bg-saffron text-white text-xs font-bold px-2.5 py-1 rounded-md shadow-sm">
+          {article.category}
+        </span>
+        {article.district && (
+          <span class="bg-deepgreen text-white text-xs font-semibold px-2 py-1 rounded-md shadow-sm">
+            {article.district}
+          </span>
+        )}
+      </div>
+    </div>
+
+    <!-- Featured Content -->
+    <div class="p-6 md:w-2/5 flex flex-col justify-between space-y-4">
+      <div class="space-y-3">
+        <div class="text-xs text-zinc-500 flex items-center gap-2">
+          <span>{timeAgo}</span>
+          <span>•</span>
+          <span>{article.source_name || 'हरियाणा न्यूज़'}</span>
+        </div>
+        <h2 class="text-xl sm:text-2xl font-extrabold text-zinc-950 leading-snug group-hover:text-saffron transition-colors">
+          <a href={`/news/${article.slug}`} class="focus:outline-hidden">
+            {article.title}
+          </a>
+        </h2>
+        {showSummary && (
+          <p class="text-sm text-zinc-600 line-clamp-3 leading-relaxed">
+            {article.summary}
+          </p>
+        )}
+      </div>
+
+      <div class="pt-2 border-t border-zinc-100 flex items-center justify-between">
+        <a
+          href={`/news/${article.slug}`}
+          class="text-xs font-bold text-saffron group-hover:text-amber-600 inline-flex items-center gap-1"
+        >
+          पूरा पढ़ें →
+        </a>
+        <span class="text-[11px] text-zinc-400">
+          {article.views || 0} बार देखा गया
+        </span>
+      </div>
+    </div>
+  </article>
+) : variant === 'horizontal' ? (
+  <article class="group flex gap-4 bg-white p-3.5 rounded-xl border border-zinc-200/80 hover:border-saffron/50 hover:shadow-md transition-all">
+    <div class="relative w-28 sm:w-36 shrink-0 aspect-[4/3] rounded-lg overflow-hidden bg-zinc-100">
+      <img
+        src={imageSrc}
+        alt={article.image_alt || article.title}
+        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+        loading={priorityImage ? 'eager' : 'lazy'}
+      />
+      <div class="absolute bottom-1 left-1 px-1.5 py-0.2 bg-black/70 text-[8px] text-zinc-300 rounded">
+        AI
+      </div>
+    </div>
+
+    <div class="flex flex-col justify-between py-0.5 space-y-1.5 flex-grow min-w-0">
+      <div class="space-y-1">
+        <div class="flex items-center gap-2 text-[11px]">
+          <span class="font-bold text-saffron">{article.category}</span>
+          <span class="text-zinc-400">•</span>
+          <span class="text-zinc-500">{timeAgo}</span>
+        </div>
+        <h3 class="text-sm sm:text-base font-bold text-zinc-900 leading-snug line-clamp-2 group-hover:text-saffron transition-colors">
+          <a href={`/news/${article.slug}`}>{article.title}</a>
+        </h3>
+      </div>
+
+      <div class="text-[11px] text-zinc-400 flex items-center justify-between">
+        <span>{article.source_name || 'हरियाणा न्यूज़'}</span>
+        {article.district && (
+          <span class="text-deepgreen font-medium">📍 {article.district}</span>
+        )}
+      </div>
+    </div>
+  </article>
+) : variant === 'compact' ? (
+  <article class="group py-2.5 border-b border-zinc-100 last:border-0 space-y-1">
+    <div class="flex items-center gap-2 text-[10px] text-zinc-500">
+      <span class="font-bold text-saffron uppercase">{article.category}</span>
+      <span>•</span>
+      <span>{timeAgo}</span>
+    </div>
+    <h4 class="text-xs sm:text-sm font-semibold text-zinc-900 leading-snug line-clamp-2 group-hover:text-saffron transition-colors">
+      <a href={`/news/${article.slug}`}>{article.title}</a>
+    </h4>
+  </article>
+) : (
+  <article class="group bg-white rounded-xl border border-zinc-200/90 overflow-hidden hover:border-saffron/40 hover:shadow-lg transition-all duration-300 flex flex-col justify-between">
+    <div>
+      <div class="relative aspect-[16/10] overflow-hidden bg-zinc-100">
+        <img
+          src={imageSrc}
+          alt={article.image_alt || article.title}
+          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          loading={priorityImage ? 'eager' : 'lazy'}
+        />
+        <div class="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded bg-black/70 backdrop-blur-xs text-[9px] text-zinc-300">
+          प्रतीकात्मक तस्वीर (AI)
+        </div>
+        <div class="absolute top-2 left-2 flex gap-1.5">
+          <span class="bg-saffron text-white text-[11px] font-bold px-2 py-0.5 rounded shadow-xs">
+            {article.category}
+          </span>
+          {article.district && (
+            <span class="bg-deepgreen text-white text-[10px] font-semibold px-1.5 py-0.5 rounded shadow-xs">
+              {article.district}
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div class="p-4 space-y-2">
+        <div class="text-[11px] text-zinc-500 flex items-center gap-1.5">
+          <span>{timeAgo}</span>
+          <span>•</span>
+          <span>{article.source_name || 'हरियाणा न्यूज़'}</span>
+        </div>
+        <h3 class="text-base font-bold text-zinc-950 leading-snug line-clamp-2 group-hover:text-saffron transition-colors">
+          <a href={`/news/${article.slug}`}>{article.title}</a>
+        </h3>
+        {showSummary && (
+          <p class="text-xs text-zinc-600 line-clamp-2 leading-relaxed">
+            {article.summary}
+          </p>
+        )}
+      </div>
+    </div>
+
+    <div class="px-4 pb-3 pt-1 border-t border-zinc-50 flex items-center justify-between text-xs text-zinc-400">
+      <a
+        href={`/news/${article.slug}`}
+        class="text-saffron font-bold text-xs group-hover:translate-x-0.5 transition-transform"
+      >
+        पढ़ें →
+      </a>
+      <span class="text-[11px]">👁 {article.views || 0}</span>
+    </div>
+  </article>
+)}

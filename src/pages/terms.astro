@@ -1,0 +1,56 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Breadcrumbs from '@/components/Breadcrumbs.astro';
+
+export const prerender = true;
+---
+
+<BaseLayout
+  title="नियम एवं शर्तें (Terms & Conditions) | हरियाणा न्यूज़"
+  description="हरियाणा न्यूज़ (haryananews.online) के उपयोग संबंधी नियम व शर्तें।"
+>
+  <div class="max-w-4xl mx-auto space-y-6">
+    <Breadcrumbs items={[{ label: 'नियम व शर्तें' }]} />
+
+    <article class="bg-white rounded-2xl border border-zinc-200/90 p-6 sm:p-10 shadow-xs space-y-6 text-zinc-800 leading-relaxed text-sm">
+      <header class="border-b border-zinc-200 pb-4">
+        <h1 class="text-2xl sm:text-4xl font-extrabold text-zinc-950">
+          नियम एवं शर्तें (Terms & Conditions)
+        </h1>
+        <p class="text-xs text-zinc-500 mt-1">अंतिम नवीनीकरण: 21 अक्टूबर 2026</p>
+      </header>
+
+      <section class="space-y-2">
+        <h2 class="text-lg font-bold text-zinc-950 border-l-4 border-saffron pl-3">1. स्वीकृति</h2>
+        <p>
+          हरियाणा न्यूज़ (haryananews.online) पर आने अथवा इसकी किसी भी सेवा का उपयोग करने पर आप इन नियमों और शर्तों का पूर्णतः पालन करने के लिए बाध्य हैं। यदि आप इन शर्तों से असहमत हैं, तो कृपया पोर्टल का उपयोग न करें।
+        </p>
+      </section>
+
+      <section class="space-y-2">
+        <h2 class="text-lg font-bold text-zinc-950 border-l-4 border-deepgreen pl-3">2. बौद्धिक संपदा अधिकार (Intellectual Property)</h2>
+        <p>
+          इस पोर्टल पर प्रकाशित सभी मूल लेख, शीर्षक, डिजाइन, लोगो और संकलन हरियाणा न्यूज़ की बौद्धिक संपदा हैं। किसी भी सामग्री को बिना पूर्व लिखित अनुमति के व्यावसायिक रूप से पुनः प्रकाशित करना वर्जित है।
+        </p>
+      </section>
+
+      <section class="space-y-2">
+        <h2 class="text-lg font-bold text-zinc-950 border-l-4 border-saffron pl-3">3. उपयोगकर्ता आचरण</h2>
+        <p>
+          उपयोगकर्ता पोर्टल का उपयोग किसी भी गैरकानूनी, आपत्तिजनक, मानहानिकारक अथवा दुर्भावनापूर्ण गतिविधि के लिए नहीं करेंगे। किसी भी प्रकार के बॉट, स्क्रैपर या अनधिकृत स्वचालित पहुंच पर प्रतिबंध है।
+        </p>
+      </section>
+
+      <section class="space-y-2">
+        <h2 class="text-lg font-bold text-zinc-950 border-l-4 border-deepgreen pl-3">4. क्षेत्राधिकार (Jurisdiction)</h2>
+        <p>
+          इन नियमों व शर्तों से संबंधित किसी भी विवाद का निपटारा हरियाणा राज्य के सिरसा स्थित न्यायालयों के अनन्य क्षेत्राधिकार के अधीन होगा।
+        </p>
+      </section>
+
+      <section class="p-4 rounded-xl bg-zinc-50 border border-zinc-200 text-xs">
+        <p>प्रश्नों के लिए लिखें: <a href="mailto:admin@haryananews.online" class="text-saffron font-bold">admin@haryananews.online</a></p>
+      </section>
+    </article>
+  </div>
+</BaseLayout>

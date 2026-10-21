@@ -1,0 +1,79 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Breadcrumbs from '@/components/Breadcrumbs.astro';
+
+export const prerender = true;
+---
+
+<BaseLayout
+  title="अस्वीकरण (Disclaimer) | हरियाणा न्यूज़"
+  description="हरियाणा न्यूज़ (haryananews.online) का अस्वीकरण, एआई जनित चित्रों की पारदर्शिता एवं वित्तीय डिस्क्लेमर।"
+>
+  <div class="max-w-4xl mx-auto space-y-6">
+    <Breadcrumbs items={[{ label: 'अस्वीकरण' }]} />
+
+    <article class="bg-white rounded-2xl border border-zinc-200/90 p-6 sm:p-10 shadow-xs space-y-6 text-zinc-800 leading-relaxed text-sm">
+      <header class="border-b border-zinc-200 pb-4">
+        <h1 class="text-2xl sm:text-4xl font-extrabold text-zinc-950">
+          अस्वीकरण (Disclaimer)
+        </h1>
+        <p class="text-xs text-zinc-500 mt-1">अंतिम नवीनीकरण: 21 अक्टूबर 2026</p>
+      </header>
+
+      <section class="space-y-2">
+        <h2 class="text-lg font-bold text-zinc-950 border-l-4 border-saffron pl-3">
+          1. सामान्य सूचना प्रकटीकरण
+        </h2>
+        <p>
+          हरियाणा न्यूज़ (haryananews.online) पर प्रकाशित सभी सामग्री, समाचार, विश्लेषण और डेटा केवल सामान्य सूचना और जन-जागरूकता के उद्देश्य से प्रस्तुत किए जाते हैं। हम सामग्री की सटीकता और प्रामाणिकता सुनिश्चित करने का हरसंभव प्रयास करते हैं, परंतु किसी भी प्रकार की अनजाने में हुई लिपिकीय त्रुटि के लिए प्रकाशक उत्तरदायी नहीं होगा।
+        </p>
+      </section>
+
+      <section class="space-y-2">
+        <h2 class="text-lg font-bold text-zinc-950 border-l-4 border-deepgreen pl-3">
+          2. एआई जनित प्रतीकात्मक चित्र (AI-Generated Symbolic Images)
+        </h2>
+        <div class="p-4 rounded-xl bg-amber-50 border border-amber-200/80 space-y-2">
+          <p class="font-bold text-zinc-950 flex items-center gap-2">
+            <span>⚠️ एआई दृश्य पारदर्शिता:</span>
+          </p>
+          <p class="text-xs text-zinc-700 leading-relaxed">
+            हमारे पोर्टल पर प्रकाशित कई खबरों के थंबनेल व चित्र आधुनिक आर्टिफिशियल इंटेलिजेंस (AI) तकनीक द्वारा प्रतीकात्मक संदर्भ के रूप में निर्मित किए जाते हैं। इन चित्रों पर स्पष्ट रूप से <strong>"प्रतीकात्मक तस्वीर (AI)"</strong> का लेबल अंकित होता है। ये चित्र किसी वास्तविक जीवित व्यक्ति, संस्था अथवा वास्तविक घटना के दस्तावेजी प्रमाण नहीं हैं।
+          </p>
+        </div>
+      </section>
+
+      <section class="space-y-2">
+        <h2 class="text-lg font-bold text-zinc-950 border-l-4 border-saffron pl-3">
+          3. मंडी भाव, सोना-चांदी, ईंधन व शेयर बाजार डिस्क्लेमर
+        </h2>
+        <p>
+          मंडी भाव (data.gov.in व स्थानीय आढ़तियों), सोना-चांदी के दाम, पेट्रोल-डीजल रेट और शेयर बाजार के आंकड़े विभिन्न अधिकृत स्रोतों से प्राप्त किए जाते हैं। बाजार में दरों में दिनभर में उतार-चढ़ाव संभव है। पाठकों और व्यापारियों को सलाह दी जाती है कि किसी भी वित्तीय लेन-देन से पूर्व संबंधित अधिकृत मंडी या डीलर से दरों की पुष्टि अवश्य कर लें।
+        </p>
+      </section>
+
+      <section class="space-y-2">
+        <h2 class="text-lg font-bold text-zinc-950 border-l-4 border-deepgreen pl-3">
+          4. ज्योतिष व दैनिक राशिफल (Astrology & Rashifal)
+        </h2>
+        <p>
+          दैनिक राशिफल, पंचांग व ज्योतिषीय भविष्यफल पारंपरिक गणनाओं एवं मान्यताओं पर आधारित होते हैं। इसे किसी भी प्रकार की वैज्ञानिक सलाह अथवा अंतिम निर्णय न मानें।
+        </p>
+      </section>
+
+      <section class="space-y-2">
+        <h2 class="text-lg font-bold text-zinc-950 border-l-4 border-saffron pl-3">
+          5. बाहरी लिंक (External Links)
+        </h2>
+        <p>
+          हमारी वेबसाइट पर संदर्भ हेतु बाहरी वेबसाइटों या सरकारी पोर्टलों (HSSC, data.gov.in आदि) के लिंक हो सकते हैं। इन बाहरी साइटों की सामग्री व नीतियों पर हमारा कोई नियंत्रण नहीं है।
+        </p>
+      </section>
+
+      <section class="p-4 rounded-xl bg-zinc-50 border border-zinc-200 text-xs">
+        <p class="font-bold text-zinc-900">संपर्क:</p>
+        <p>किसी भी आपत्ति अथवा सुधार के लिए लिखें: <a href="mailto:admin@haryananews.online" class="text-saffron font-bold">admin@haryananews.online</a></p>
+      </section>
+    </article>
+  </div>
+</BaseLayout>

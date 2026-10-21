@@ -1,0 +1,35 @@
+---
+import type { Article } from '@/types/database';
+
+interface Props {
+  articles: Article[];
+}
+
+const { articles = [] } = Astro.props;
+const topHeadline = articles[0]?.title || 'हरियाणा न्यूज़ पोर्टल — हरियाणा की हर खबर सबसे तेज़ और सटीक';
+const topSlug = articles[0]?.slug;
+---
+
+<div class="bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 text-white rounded-xl shadow-md p-2.5 px-4 flex items-center gap-3 overflow-hidden">
+  <div class="flex items-center gap-1.5 shrink-0 bg-white/20 backdrop-blur-xs px-2.5 py-1 rounded-md text-xs font-black uppercase tracking-wider">
+    <span class="w-2 h-2 rounded-full bg-white animate-ping"></span>
+    <span class="text-white">ब्रेकिंग</span>
+  </div>
+
+  <div class="overflow-hidden whitespace-nowrap text-xs sm:text-sm font-semibold flex-grow">
+    {topSlug ? (
+      <a href={`/news/${topSlug}`} class="hover:underline flex items-center gap-2 truncate">
+        <span>{topHeadline}</span>
+      </a>
+    ) : (
+      <span class="truncate">{topHeadline}</span>
+    )}
+  </div>
+
+  <a
+    href="/category/top-news"
+    class="shrink-0 text-[11px] font-bold text-white/90 hover:text-white bg-black/20 hover:bg-black/30 px-2 py-0.5 rounded transition-colors hidden sm:block"
+  >
+    सभी बड़ी खबरें →
+  </a>
+</div>

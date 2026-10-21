@@ -1,0 +1,104 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Breadcrumbs from '@/components/Breadcrumbs.astro';
+
+export const prerender = true;
+---
+
+<BaseLayout
+  title="संपर्क करें (Contact Us) | हरियाणा न्यूज़"
+  description="हरियाणा न्यूज़ संपादकीय डेस्क, शिकायत अधिकारी एवं विज्ञापन हेतु संपर्क विवरण।"
+>
+  <div class="max-w-4xl mx-auto space-y-6">
+    <Breadcrumbs items={[{ label: 'संपर्क करें' }]} />
+
+    <article class="bg-white rounded-2xl border border-zinc-200/90 p-6 sm:p-10 shadow-xs space-y-8 text-zinc-800 leading-relaxed">
+      <header class="border-b border-zinc-200 pb-4">
+        <h1 class="text-2xl sm:text-4xl font-extrabold text-zinc-950">
+          संपर्क करें (Contact Us)
+        </h1>
+        <p class="text-sm text-zinc-500 mt-1">
+          पाठक, संवाददाता व विज्ञापनदाता हमसे सीधे संपर्क कर सकते हैं
+        </p>
+      </header>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Contact Card 1 -->
+        <div class="p-6 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-3">
+          <div class="w-10 h-10 rounded-xl bg-saffron/10 text-saffron flex items-center justify-center font-bold text-xl">
+            ✉️
+          </div>
+          <h2 class="text-lg font-bold text-zinc-950">संपादकीय एवं सामान्य पूछताछ</h2>
+          <p class="text-xs text-zinc-600 leading-relaxed">
+            समाचार सुझाव, प्रेस रिलीज या किसी खबर पर अपना फीडबैक भेजने के लिए:
+          </p>
+          <a
+            href="mailto:admin@haryananews.online"
+            class="inline-block text-saffron font-bold text-sm hover:underline"
+          >
+            admin@haryananews.online
+          </a>
+        </div>
+
+        <!-- Contact Card 2 -->
+        <div class="p-6 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-3">
+          <div class="w-10 h-10 rounded-xl bg-deepgreen/10 text-deepgreen flex items-center justify-center font-bold text-xl">
+            ⚖️
+          </div>
+          <h2 class="text-lg font-bold text-zinc-950">शिकायत निवारण अधिकारी (Grievance)</h2>
+          <p class="text-xs text-zinc-600 leading-relaxed">
+            डिजिटल मीडिया आचार संहिता (IT Rules 2021) के तहत किसी भी प्रकाशित सामग्री के संबंध में शिकायत हेतु:
+          </p>
+          <p class="text-xs font-semibold text-zinc-800">
+            ईमेल: grievance@haryananews.online
+          </p>
+          <p class="text-[11px] text-zinc-500">
+            शिकायत प्राप्त होने के 24 घंटे के भीतर पावती व 15 दिनों में निवारण किया जाता है।
+          </p>
+        </div>
+      </div>
+
+      <!-- Postal Address -->
+      <section class="p-6 rounded-2xl bg-zinc-900 text-zinc-200 space-y-2">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <span>📍 मुख्य कार्यालय पता</span>
+        </h3>
+        <p class="text-sm text-zinc-400">
+          हरियाणा न्यूज़ (haryananews.online)<br />
+          डिजिटल मीडिया प्रभाग, कोर्ट रोड, निकट बस स्टैंड,<br />
+          सिरसा, हरियाणा — 125055, भारत
+        </p>
+      </section>
+
+      <!-- Feedback Form Placeholder -->
+      <section class="space-y-4">
+        <h3 class="text-lg font-bold text-zinc-950 border-l-4 border-saffron pl-3">
+          त्वरित संदेश भेजें
+        </h3>
+        <form class="space-y-4 max-w-xl">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-zinc-700 mb-1">आपका नाम</label>
+              <input type="text" required class="w-full px-3 py-2 border border-zinc-300 rounded-lg text-sm bg-zinc-50 focus:bg-white focus:outline-hidden focus:border-saffron" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-zinc-700 mb-1">ईमेल</label>
+              <input type="email" required class="w-full px-3 py-2 border border-zinc-300 rounded-lg text-sm bg-zinc-50 focus:bg-white focus:outline-hidden focus:border-saffron" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-zinc-700 mb-1">विषय</label>
+            <input type="text" required class="w-full px-3 py-2 border border-zinc-300 rounded-lg text-sm bg-zinc-50 focus:bg-white focus:outline-hidden focus:border-saffron" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-zinc-700 mb-1">संदेश</label>
+            <textarea rows="4" required class="w-full px-3 py-2 border border-zinc-300 rounded-lg text-sm bg-zinc-50 focus:bg-white focus:outline-hidden focus:border-saffron"></textarea>
+          </div>
+          <button type="button" class="px-6 py-2.5 bg-saffron hover:bg-amber-600 text-white font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer">
+            संदेश भेजें
+          </button>
+        </form>
+      </section>
+    </article>
+  </div>
+</BaseLayout>

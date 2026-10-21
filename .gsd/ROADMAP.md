@@ -40,9 +40,16 @@ updated: "2026-10-21T12:45:00+05:30"
 ---
 
 ### Phase 2: Public Portal, Core Pages & SEO Engine
-**Status:** ⬜ Not Started
+**Status:** ✅ Complete
 **Objective:** Build high-speed public news portal with mobile-first Haryana layout, Breaking News ticker, Grid sections, District filters, Article page with social share & AI image badge, AdSense legal pages, and NewsArticle JSON-LD / Sitemaps.
 **Depends on:** Phase 1
+**Tasks:**
+- [x] Task 2.1: Homepage Layout, Breaking News & Section Grids
+- [x] Task 2.2: Article Detail Page with Social Share, Breadcrumbs & AI Badge
+- [x] Task 2.3: Category & District Routing
+- [x] Task 2.4: Search Engine & News Archive
+- [x] Task 2.5: AdSense-Ready Hindi Legal & Information Pages
+- [x] Task 2.6: SEO Engine — Dynamic Sitemaps, RSS & Robots.txt
 
 ---
 
@@ -72,7 +79,7 @@ updated: "2026-10-21T12:45:00+05:30"
 | Phase | Status | Tasks | Complete |
 |---|---|---|---|
 | 1. Foundation & Database | ✅ Complete | 7 | 7/7 |
-| 2. Public Portal & SEO | ⬜ Not Started | 6 | 0/6 |
+| 2. Public Portal & SEO | ✅ Complete | 6 | 6/6 |
 | 3. Auto-Publishing Pipeline | ⬜ Not Started | 6 | 0/6 |
 | 4. Admin Panel & MFA | ⬜ Not Started | 6 | 0/6 |
 | 5. Deployment & Launch | ⬜ Not Started | 5 | 0/5 |

@@ -32,8 +32,8 @@
 ## 2. Project Milestones Roadmap
 
 - [x] **Milestone 1: Project Scaffolding, Environment Config & Database Foundation** *(Completed)*
-- [ ] **Milestone 2: Public Portal, Core Pages, Design System & SEO Engine**
-- [ ] **Milestone 3: Auto-Publishing Pipeline, Edge Functions & External API Integrations**
+- [x] **Milestone 2: Public Portal, Core Pages, Design System & SEO Engine** *(Completed)*
+- [ ] **Milestone 3: Auto-Publishing Pipeline, Edge Functions & External API Integrations** *(Next Phase)*
 - [ ] **Milestone 4: Secure Admin Panel, MFA, Turnstile & AI Editorial Chat**
 - [ ] **Milestone 5: Deployment, Cron Job Configuration, End-to-End Testing & Security Audit**
 
@@ -312,9 +312,131 @@ Establish a clean Astro SSR repository with Tailwind CSS, Cloudflare Pages adapt
 
 ## 4. Phase 1 Verification & Exit Criteria
 
-Before declaring Milestone 1 complete:
-1. **Compilation Check:** `npx astro build` produces zero errors.
-2. **Type Safety Check:** `npx astro check` passes with zero type errors.
-3. **Environment Security Check:** `.env` is uncommitted and completely ignored by git.
-4. **SQL Migrations Check:** All migration files exist under `supabase/migrations/` and cover all required tables, constraints, indexes, RLS policies, and seed data.
-5. **Git Commit:** Milestone 1 changes committed cleanly with descriptive commit messages following `type(scope): description`.
+Milestone 1 completed and verified:
+1. Compilation Check: `npx astro build` completed in 2.50s (0 errors).
+2. Type Safety Check: `npx astro check` passed with 0 errors, 0 warnings.
+3. Environment Security Check: `.env` is uncommitted and completely ignored by git.
+4. SQL Migrations Check: 3 SQL migration files in `supabase/migrations/` covering 7 tables, RLS policies, indexes, and seed data.
+5. Git Commit: `cc65514` and `59d361a`.
+
+---
+
+## 5. Milestone 2: Detailed Atomic Tasks (Public Portal, Core Pages & SEO Engine)
+
+### Phase Objective
+Deliver a production-ready, ultra-fast Hindi news portal frontend with mobile-first responsive layout, Breaking News ticker, Homepage sections, Article detail pages with social sharing & AI image disclaimers, Category & District routing, AdSense-ready policy pages, NewsArticle JSON-LD, and dynamic XML/Google News sitemaps.
+
+---
+
+### [x] Task 2.1: Homepage Layout, Breaking News & Section Grids
+- **Objective:** Build a rich, vibrant homepage with Breaking News ticker, Hero featured article, Latest grid, and Category showcases with ImageKit URL transformations.
+- **Target Files:**
+  - `src/pages/index.astro`
+  - `src/components/BreakingTicker.astro`
+  - `src/components/ArticleCard.astro`
+  - `src/utils/imagekit.ts`
+- **Actions:**
+  1. Create ImageKit helper (`src/utils/imagekit.ts`) to apply transformations: `tr=w-800,f-webp,q-85` for desktop and `tr=w-400,f-webp,q-80` for cards.
+  2. Create `src/components/ArticleCard.astro` supporting compact, horizontal, and featured grid variants with category tag, IST date, and hover animation.
+  3. Create `src/components/BreakingTicker.astro` displaying latest breaking headlines with pulse indicator.
+  4. Build `src/pages/index.astro` sections: Hero Top Story, Trending Row, Mandi/Weather quick widget, and Category grids (Haryana, Regional, Jobs, Sports).
+- **Verification:** Run `npx astro check` and verify component rendering.
+- **Success Criteria:** Home page renders full structured layout, breaking ticker, and handles empty state gracefully.
+
+---
+
+### [x] Task 2.2: Article Detail Page with Social Share, Breadcrumbs & AI Badge
+- **Objective:** Create `/news/[slug]` dynamic SSR page featuring complete article layout, social sharing buttons, and Google News compliant metadata.
+- **Target Files:**
+  - `src/pages/news/[slug].astro`
+  - `src/components/ShareButtons.astro`
+  - `src/components/Breadcrumbs.astro`
+- **Actions:**
+  1. Author `src/pages/news/[slug].astro`:
+     - Fetch published article by slug. Return 404 if not found.
+     - Headline (H1), summary lead, byline ("हरियाणा न्यूज़ ब्यूरो"), date in IST Hindi formatting.
+     - Main thumbnail with caption `"प्रतीकात्मक तस्वीर (AI)"` as specified in prompt.
+     - Body HTML rendering with sanitized markup.
+     - Source attribution badge with external link if present.
+     - Related articles section (matching category or district).
+  2. Create `src/components/Breadcrumbs.astro` (`होम > [कैटेगरी] > [शीर्षक]`).
+  3. Create `src/components/ShareButtons.astro` with WhatsApp (`api.whatsapp.com/send`), Telegram, Facebook, X (Twitter), and Copy Link with copy feedback toast.
+  4. Include complete `NewsArticle` JSON-LD schema (headline, image, datePublished, author, publisher).
+- **Verification:** Run `npx astro check` and verify type safety.
+- **Success Criteria:** Article detail page loads, renders meta tags for WhatsApp previews, and formats IST dates in Hindi.
+
+---
+
+### [x] Task 2.3: Category & District Routing
+- **Objective:** Implement dynamic category and district listing pages.
+- **Target Files:**
+  - `src/pages/category/[category].astro`
+  - `src/pages/district/[district].astro`
+- **Actions:**
+  1. Create `src/pages/category/[category].astro`:
+     - Load category details and articles filtered by `category = slug`.
+     - Display category title, description, article count, and responsive article grid.
+  2. Create `src/pages/district/[district].astro`:
+     - Load district info from `HARYANA_DISTRICTS` constant.
+     - Filter articles by `district = district_slug`.
+     - Highlight regional news for Sirsa, Fatehabad, Hisar, Adampur, Ellenabad, Nohar, Bhadra.
+- **Verification:** Run `npx astro check` to verify route typing.
+- **Success Criteria:** Both dynamic routes handle valid and invalid slugs gracefully.
+
+---
+
+### [x] Task 2.4: Search Engine & News Archive
+- **Objective:** Create search page `/search` allowing readers to search news by keywords and tags.
+- **Target Files:**
+  - `src/pages/search.astro`
+- **Actions:**
+  1. Create SSR search page reading query param `?q=...`.
+  2. Query published articles via Supabase with `ilike` filter on title, summary, and tags.
+  3. Render search input, active query pills, and results grid.
+- **Verification:** Run `npx astro check`.
+- **Success Criteria:** Search page accepts URL queries and renders matching articles.
+
+---
+
+### [x] Task 2.5: AdSense-Ready Hindi Legal & Information Pages
+- **Objective:** Build required static legal/informational pages in clean Hindi for Google AdSense compliance.
+- **Target Files:**
+  - `src/pages/about.astro`
+  - `src/pages/contact.astro`
+  - `src/pages/privacy-policy.astro`
+  - `src/pages/disclaimer.astro`
+  - `src/pages/terms.astro`
+- **Actions:**
+  1. Author `about.astro`: Mission, editorial principles, Haryana focus, editorial desk.
+  2. Author `contact.astro`: Contact email, address (Sirsa/Haryana), editorial feedback, grievance officer.
+  3. Author `privacy-policy.astro`: Cookies, GDPR/DPDP Act, analytics, third-party advertising compliance.
+  4. Author `disclaimer.astro`: AI image transparency ("प्रतीकात्मक तस्वीर (AI)"), news source credits, copyright fair use.
+  5. Author `terms.astro`: Website terms, content usage, user guidelines.
+- **Verification:** Run `npx astro check` and check all 5 pages render with BaseLayout.
+- **Success Criteria:** All 5 legal pages published in Hindi and AdSense-ready.
+
+---
+
+### [x] Task 2.6: SEO Engine — Dynamic Sitemaps, RSS & Robots.txt
+- **Objective:** Implement search engine crawlers and syndication endpoints for Google Search and Google News.
+- **Target Files:**
+  - `src/pages/robots.txt.ts`
+  - `src/pages/sitemap.xml.ts`
+  - `src/pages/google-news-sitemap.xml.ts`
+  - `src/pages/rss.xml.ts`
+- **Actions:**
+  1. `robots.txt.ts`: Disallow `/admin` and `/api/`, Allow `/`, specify sitemap URLs.
+  2. `sitemap.xml.ts`: Standard XML sitemap containing all published articles, active categories, districts, and legal pages with `<lastmod>`.
+  3. `google-news-sitemap.xml.ts`: Google News sitemap containing articles published in the last 48 hours with `<news:news>` namespace tags (`<news:publication>`, `<news:publication_date>`, `<news:title>`).
+  4. `rss.xml.ts`: RSS 2.0 feed with Hindi content channel, items with permalinks, `<pubDate>`, and enclosures.
+- **Verification:** Run `npx astro check` and `npx astro build`.
+- **Success Criteria:** Valid XML responses generated with correct Content-Type `application/xml` or `text/xml`.
+
+---
+
+## 6. Phase 2 Verification & Exit Criteria
+1. `npx astro check` passes with 0 errors.
+2. `npx astro build` completes successfully.
+3. All routes accessible: `/`, `/news/[slug]`, `/category/[category]`, `/district/[district]`, `/search`, `/about`, `/contact`, `/privacy-policy`, `/disclaimer`, `/terms`, `/sitemap.xml`, `/google-news-sitemap.xml`, `/rss.xml`, `/robots.txt`.
+4. Git commit with `feat(milestone-2): ...`.
+

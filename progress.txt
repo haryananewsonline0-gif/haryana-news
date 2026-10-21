@@ -1,13 +1,13 @@
 === Haryana News (haryananews.online) Progress Log ===
 [2026-10-21 12:45 IST] Setup completed: GSD + Ralph Loop template installed.
 [2026-10-21 12:45 IST] SPEC.md finalized. ROADMAP.md initialized. PLAN.md created.
-[2026-10-21 12:55 IST] Milestone 1 COMPLETED:
-  - Task 1.1: Astro SSR with @astrojs/cloudflare adapter configured.
-  - Task 1.2: .env.example created with all 21 prompt variables. .gitignore hardened. supabase/secrets.example.sh created.
-  - Task 1.3: Supabase initial schema migration created with 7 tables and 7 indexes.
-  - Task 1.4: Supabase RLS policies migration created with zero-trust admin & public rules.
-  - Task 1.5: Seed data migration created for 15 slots timetable, news categories, and manual fallback rates.
-  - Task 1.6: Strict TypeScript database types and client/server Supabase modules created.
-  - Task 1.7: Tailwind Haryana theme tokens, Noto Sans Devanagari typography, BaseLayout, and districts constants created.
-  - Verification: `npx astro check` passed with 0 errors/0 warnings, `npx astro build` completed with code 0.
-[2026-10-21 12:55 IST] Ready for Milestone 2: Public Portal, Core Pages & SEO Engine.
+[2026-10-21 12:55 IST] Milestone 1 COMPLETED (Database, RLS, Scaffolding, Design foundation).
+[2026-10-21 13:08 IST] Milestone 2 COMPLETED:
+  - Task 2.1: Homepage Layout with live Breaking News Ticker, market rates strip, hero story, and regional grid.
+  - Task 2.2: Article detail route (/news/[slug]) with IST formatting, "प्रतीकात्मक तस्वीर (AI)" caption, source citations, NewsArticle JSON-LD, and multi-channel share buttons (WhatsApp, Telegram, Facebook, X, Copy link).
+  - Task 2.3: Dynamic Category (/category/[category]) & District (/district/[district]) routing with localized priority for Sirsa, Fatehabad, Hisar, Adampur, Ellenabad, Nohar, Bhadra.
+  - Task 2.4: Search engine route (/search) with server-side query filters and popular search tags.
+  - Task 2.5: AdSense-ready Hindi policy pages (/about, /contact, /privacy-policy, /disclaimer, /terms).
+  - Task 2.6: Complete SEO engine with /robots.txt, dynamic /sitemap.xml, Google News sitemap (/google-news-sitemap.xml for last 48h), and /rss.xml syndication feed.
+  - Verification: `npx astro check` passed with 0 errors/0 warnings (29 files). `npx astro build` completed with code 0.
+[2026-10-21 13:08 IST] Ready for Milestone 3: Auto-Publishing Pipeline, Edge Functions & External API Integrations.

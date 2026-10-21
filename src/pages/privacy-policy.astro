@@ -1,0 +1,64 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Breadcrumbs from '@/components/Breadcrumbs.astro';
+
+export const prerender = true;
+---
+
+<BaseLayout
+  title="गोपनीयता नीति (Privacy Policy) | हरियाणा न्यूज़"
+  description="हरियाणा न्यूज़ (haryananews.online) की गोपनीयता नीति, कुकीज़ और डेटा सुरक्षा संबंधी नियम।"
+>
+  <div class="max-w-4xl mx-auto space-y-6">
+    <Breadcrumbs items={[{ label: 'गोपनीयता नीति' }]} />
+
+    <article class="bg-white rounded-2xl border border-zinc-200/90 p-6 sm:p-10 shadow-xs space-y-6 text-zinc-800 leading-relaxed text-sm">
+      <header class="border-b border-zinc-200 pb-4">
+        <h1 class="text-2xl sm:text-4xl font-extrabold text-zinc-950">
+          गोपनीयता नीति (Privacy Policy)
+        </h1>
+        <p class="text-xs text-zinc-500 mt-1">अंतिम नवीनीकरण: 21 अक्टूबर 2026</p>
+      </header>
+
+      <section class="space-y-2">
+        <h2 class="text-lg font-bold text-zinc-950 border-l-4 border-saffron pl-3">1. सामान्य परिचय</h2>
+        <p>
+          हरियाणा न्यूज़ (haryananews.online) पर हमारे पाठकों की निजता का सम्मान करना हमारी सर्वोच्च प्राथमिकता है। यह गोपनीयता नीति स्पष्ट करती है कि जब आप हमारी वेबसाइट का उपयोग करते हैं, तो किस प्रकार की जानकारी एकत्रित की जाती है और उसका उपयोग कैसे किया जाता है।
+        </p>
+      </section>
+
+      <section class="space-y-2">
+        <h2 class="text-lg font-bold text-zinc-950 border-l-4 border-deepgreen pl-3">2. कुकीज़ और वेब बीकन (Cookies & Web Beacons)</h2>
+        <p>
+          haryananews.online पाठकों की प्राथमिकताओं को समझने और उपयोगकर्ता अनुभव को बेहतर बनाने के लिए मानक कुकीज़ (Cookies) का उपयोग करता है। कुकीज़ छोटी टेक्स्ट फाइलें होती हैं जो आपके ब्राउज़र में स्टोर की जाती हैं।
+        </p>
+      </section>
+
+      <section class="space-y-2">
+        <h2 class="text-lg font-bold text-zinc-950 border-l-4 border-saffron pl-3">3. गूगल एडसेंस व विज्ञापन भागीदार (Google AdSense & Third-Party Ads)</h2>
+        <p>
+          हमारी साइट पर तृतीय-पक्ष विज्ञापनदाता (जैसे Google AdSense) विज्ञापन प्रदर्शित कर सकते हैं। Google अपने उपयोगकर्ताओं को उनकी पिछली वेब विज़िट के आधार पर प्रासंगिक विज्ञापन दिखाने के लिए डार्ट (DART) कुकीज़ का उपयोग करता है। पाठक Google विज्ञापन और सामग्री नेटवर्क गोपनीयता नीति पर जाकर DART कुकी के उपयोग से ऑप्ट-आउट कर सकते हैं।
+        </p>
+      </section>
+
+      <section class="space-y-2">
+        <h2 class="text-lg font-bold text-zinc-950 border-l-4 border-deepgreen pl-3">4. लॉग फाइल्स (Log Files)</h2>
+        <p>
+          अन्य वेबसाइटों की भांति हम भी मानक लॉग फाइलों का उपयोग करते हैं। इसमें इंटरनेट प्रोटोकॉल (IP) पता, ब्राउज़र का प्रकार, इंटरनेट सेवा प्रदाता (ISP), दिनांक/समय स्टैंप, और रेफ़रिंग/एग्जिट पेज शामिल हो सकते हैं। यह जानकारी व्यक्तिगत रूप से पहचान योग्य नहीं होती है और इसका उपयोग केवल साइट विश्लेषण व तकनीकी सुधार के लिए किया जाता है।
+        </p>
+      </section>
+
+      <section class="space-y-2">
+        <h2 class="text-lg font-bold text-zinc-950 border-l-4 border-saffron pl-3">5. डिजिटल व्यक्तिगत डेटा संरक्षण (DPDP Act 2023)</h2>
+        <p>
+          हम भारत के डिजिटल व्यक्तिगत डेटा संरक्षण अधिनियम (DPDP Act 2023) के अनुपालन के लिए प्रतिबद्ध हैं। हम किसी भी पाठक की व्यक्तिगत संवेदनशील जानकारी को बिना सहमति किसी तीसरे पक्ष को बेचते या साझा नहीं करते हैं।
+        </p>
+      </section>
+
+      <section class="p-4 rounded-xl bg-zinc-50 border border-zinc-200 space-y-1 text-xs">
+        <p class="font-bold text-zinc-900">गोपनीयता नीति संबंधी किसी भी प्रश्न के लिए संपर्क करें:</p>
+        <p>ईमेल: privacy@haryananews.online या admin@haryananews.online</p>
+      </section>
+    </article>
+  </div>
+</BaseLayout>

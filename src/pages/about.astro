@@ -1,0 +1,63 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Breadcrumbs from '@/components/Breadcrumbs.astro';
+
+export const prerender = true; // Static page
+---
+
+<BaseLayout
+  title="हमारे बारे में (About Us) | हरियाणा न्यूज़"
+  description="हरियाणा न्यूज़ (haryananews.online) का परिचय, संपादकीय मूल्य और मिशन।"
+>
+  <div class="max-w-4xl mx-auto space-y-6">
+    <Breadcrumbs items={[{ label: 'हमारे बारे में' }]} />
+
+    <article class="bg-white rounded-2xl border border-zinc-200/90 p-6 sm:p-10 shadow-xs space-y-6 text-zinc-800 leading-relaxed">
+      <header class="border-b border-zinc-200 pb-4">
+        <h1 class="text-2xl sm:text-4xl font-extrabold text-zinc-950">
+          हमारे बारे में (About Us)
+        </h1>
+        <p class="text-sm text-zinc-500 mt-1">
+          haryananews.online — हरियाणा की आवाज़, निष्पक्ष पत्रकारिता का संकल्प
+        </p>
+      </header>
+
+      <section class="space-y-3">
+        <h2 class="text-xl font-bold text-zinc-950 border-l-4 border-saffron pl-3">
+          हमारा परिचय
+        </h2>
+        <p>
+          <strong>हरियाणा न्यूज़ (haryananews.online)</strong> हरियाणा राज्य का एक समर्पित एवं स्वतंत्र डिजिटल हिंदी समाचार पोर्टल है। हमारा मुख्य उद्देश्य हरियाणा के 22 जिलों, विशेष रूप से सिरसा, फतेहाबाद, हिसार, आदमपुर, ऐलनाबाद, नोहर व सीमावर्ती क्षेत्रों की प्रत्येक महत्वपूर्ण खबर को निष्पक्षता और त्वरित गति से पाठकों तक पहुँचाना है।
+        </p>
+      </section>
+
+      <section class="space-y-3">
+        <h2 class="text-xl font-bold text-zinc-950 border-l-4 border-deepgreen pl-3">
+          हम क्या कवर करते हैं?
+        </h2>
+        <ul class="list-disc pl-5 space-y-1.5 text-sm">
+          <li><strong>मंडी भाव (Mandi Bhav):</strong> सिरसा, आदमपुर, नोहर, ऐलनाबाद, फतेहाबाद मंडियों के प्रामाणिक शाम के भाव।</li>
+          <li><strong>जिलावार मौसम (Weather Forecast):</strong> ओपन-मीटियो (Open-Meteo) वैज्ञानिक डेटा आधारित वर्षा व तापमान पूर्वानुमान।</li>
+          <li><strong>सरकारी योजनाएं व भर्तियां:</strong> हरियाणा सरकार, केंद्र सरकार की योजनाएं, HSSC, पुलिस भर्ती, एडमिट कार्ड व परिणाम।</li>
+          <li><strong>पंचांग व धर्म-संस्कृति:</strong> दैनिक प्रामाणिक पंचांग, चौघड़िया, राहुकाल और सभी 12 राशियों का राशिफल।</li>
+          <li><strong>खेल व संस्कृति:</strong> हरियाणा के राष्ट्रीय-अंतरराष्ट्रीय खिलाड़ी, कुश्ती, क्रिकेट व ग्रामीण खेलकूद।</li>
+        </ul>
+      </section>
+
+      <section class="space-y-3">
+        <h2 class="text-xl font-bold text-zinc-950 border-l-4 border-saffron pl-3">
+          संपादकीय नीति व पारदर्शिता
+        </h2>
+        <p>
+          हम सनसनीखेज खबरों के स्थान पर तथ्यों पर आधारित पत्रकारिता में विश्वास करते हैं। हमारे पोर्टल पर उपयोग की जाने वाली दृश्य सामग्री व थंबनेल यदि एआई तकनीक से प्रतीकात्मक रूप में तैयार किए गए हैं, तो उन पर स्पष्ट रूप से <em>"प्रतीकात्मक तस्वीर (AI)"</em> का लेबल अंकित किया जाता है।
+        </p>
+      </section>
+
+      <section class="p-4 rounded-xl bg-zinc-50 border border-zinc-200 text-sm space-y-1">
+        <h3 class="font-bold text-zinc-900">संपादकीय कार्यालय:</h3>
+        <p>हरियाणा न्यूज़ डिजिटल डेस्क, सिरसा, हरियाणा (125055)</p>
+        <p>ईमेल: <a href="mailto:admin@haryananews.online" class="text-saffron font-bold">admin@haryananews.online</a></p>
+      </section>
+    </article>
+  </div>
+</BaseLayout>
