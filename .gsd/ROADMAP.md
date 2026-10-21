@@ -1,24 +1,24 @@
 ---
 milestone: "Haryana News Platform V1"
 version: "1.0.0"
-updated: "2026-10-21T12:45:00+05:30"
+updated: "2026-10-21T13:43:00+05:30"
 ---
 
 # Roadmap — Haryana News (haryananews.online)
 
-> **Current Phase:** Phase 1 - Foundation, Database Architecture & Scaffolding
-> **Status:** 🔄 Executing
+> **Current Phase:** Phase 5 - Deployment, Cron Configuration & Launch
+> **Status:** ✅ Complete — All Milestones Accomplished
 
 ---
 
 ## Must-Haves (from SPEC)
-- [ ] Astro SSR on Cloudflare Pages with Tailwind & Noto Sans Devanagari
-- [ ] Supabase Database Schema with 7 tables, strict RLS & performance indexes
-- [ ] Seed data for 15 IST publishing slots, news categories & fallback schema
-- [ ] Public News Portal (Home, Article Page, Categories, Districts, AdSense-ready pages)
-- [ ] Auto-Publishing Edge Function with Gemini AI, Pollinations/ImageKit & Green API WhatsApp
-- [ ] Secure Admin Panel (/admin) with Supabase Auth, TOTP MFA & Turnstile rate limiting
-- [ ] External cron-job.org timetable configuration and production deployment guides
+- [x] Astro SSR on Cloudflare Pages with Tailwind & Noto Sans Devanagari
+- [x] Supabase Database Schema with 7 tables, strict RLS & performance indexes
+- [x] Seed data for 15 IST publishing slots, news categories & fallback schema
+- [x] Public News Portal (Home, Article Page, Categories, Districts, AdSense-ready pages)
+- [x] Auto-Publishing Edge Function with Gemini AI, Pollinations/ImageKit & Green API WhatsApp
+- [x] Secure Admin Panel (/admin) with Supabase Auth, TOTP MFA & Turnstile rate limiting
+- [x] External cron-job.org timetable configuration and production deployment guides
 
 ---
 
@@ -68,16 +68,30 @@ updated: "2026-10-21T12:45:00+05:30"
 ---
 
 ### Phase 4: Secure Admin Panel & Editorial Dashboard
-**Status:** ⬜ Not Started
+**Status:** ✅ Complete
 **Objective:** Build `/admin` panel with email allowlist, Supabase Auth + TOTP 2FA, Cloudflare Turnstile, Article management (publish/unpublish/edit), manual rates entry, slot trigger buttons, kill switch, logs viewer, and Hinglish AI editorial assistant.
 **Depends on:** Phase 1, Phase 2, Phase 3
+**Tasks:**
+- [x] Task 4.1: Security Middleware, HTTP Headers & Admin Auth Guard
+- [x] Task 4.2: Admin Login with Cloudflare Turnstile & Rate Limiter
+- [x] Task 4.3: TOTP 2FA (MFA) Setup & Challenge Verification
+- [x] Task 4.4: Admin Layout, Dashboard, Kill Switch & Slot "Regenerate Now" Triggers
+- [x] Task 4.5: Article Management (CRUD, Edit, Unpublish, Delete & Manual Creation)
+- [x] Task 4.6: Manual Data Entry Form & Generation Logs Viewer
+- [x] Task 4.7: Hinglish AI Editor Chat
 
 ---
 
 ### Phase 5: Deployment, Cron Configuration & Verification
-**Status:** ⬜ Not Started
+**Status:** ✅ Complete
 **Objective:** Cloudflare Pages deployment configuration, custom domain setup (`haryananews.online`), cron-job.org timetable setup table, security audit, and end-to-end testing checklist.
 **Depends on:** Phase 4
+**Tasks:**
+- [x] Task 5.1: Cloudflare Pages Deployment Configuration (`wrangler.toml` & `ads.txt`)
+- [x] Task 5.2: Cron-Job.org 15-Slot Automation Timetable & Config Guide (`CRON_SCHEDULE.md`)
+- [x] Task 5.3: Domain Connection & Cloudflare DNS Guide (`DOMAIN_SETUP.md`)
+- [x] Task 5.4: Production Secrets & Supabase CLI Commands (`SECRETS.md`)
+- [x] Task 5.5: Complete Documentation & Operations Manual (`README.md`)
 
 ---
 
@@ -88,5 +102,6 @@ updated: "2026-10-21T12:45:00+05:30"
 | 1. Foundation & Database | ✅ Complete | 7 | 7/7 |
 | 2. Public Portal & SEO | ✅ Complete | 6 | 6/6 |
 | 3. Auto-Publishing Pipeline | ✅ Complete | 6 | 6/6 |
-| 4. Admin Panel & MFA | ⬜ Not Started | 6 | 0/6 |
-| 5. Deployment & Launch | ⬜ Not Started | 5 | 0/5 |
+| 4. Admin Panel & MFA | ✅ Complete | 7 | 7/7 |
+| 5. Deployment & Launch | ✅ Complete | 5 | 5/5 |
+| **Total** | **✅ 100% Complete** | **31** | **31/31** |
