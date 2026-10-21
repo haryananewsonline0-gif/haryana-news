@@ -1,0 +1,350 @@
+---
+// ==============================================================================
+// Admin: Edit Article Form
+// Route: /admin/articles/edit/[id]
+// ==============================================================================
+
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import { getServiceSupabase } from '@/lib/supabase/server';
+import { HARYANA_DISTRICTS } from '@/constants/districts';
+import { CATEGORIES } from '@/constants/categories';
+import type { Article } from '@/types/database';
+
+export const prerender = false;
+
+const id = Astro.params.id;
+if (!id) {
+  return Astro.redirect('/admin/articles');
+}
+
+const runtimeEnv = Astro.locals?.runtime?.env;
+const supabase = getServiceSupabase(runtimeEnv);
+
+const { data, error } = await supabase.from('articles').select('*').eq('id', id).maybeSingle();
+
+if (error || !data) {
+  return Astro.redirect('/admin/articles');
+}
+
+const article = data as Article;
+const tagsStr = Array.isArray(article.tags) ? article.tags.join(', ') : '';
+---
+
+<AdminLayout title="समाचार संपादित करें" activeNav="articles">
+  <div class="max-w-4xl mx-auto space-y-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <h2 class="text-xl font-bold text-white">समाचार संपादन</h2>
+        <p class="text-xs text-slate-400 mt-1">
+          ID: <span class="font-mono text-slate-300">{article.id}</span> • बनाया गया: {new Date(article.created_at).toLocaleString('hi-IN', { timeZone: 'Asia/Kolkata' })}
+        </p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        {article.status === 'published' && (
+          <a
+            href={`/news/${article.slug}`}
+            target="_blank"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700 text-xs font-semibold hover:bg-slate-700 transition-all"
+          >
+            <svg class="w-4 h-4 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+            <span>लाइव देखें</span>
+          </a>
+        )}
+      </div>
+    </div>
+
+    {article.status === 'draft' && (
+      <div class="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-start gap-2.5">
+        <svg class="w-5 h-5 shrink-0 text-amber-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <div>
+          <span class="font-bold block text-sm">यह लेख समीक्षाधीन ड्राफ्ट है (Draft / Quarantined)</span>
+          <span>संवेदनशील विषय या स्वचालित सुरक्षा जांच के कारण यह लेख अभी लाइव नहीं है। सामग्री की समीक्षा करने के बाद स्थिति को "प्रकाशित" में बदलकर सहेजें।</span>
+        </div>
+      </div>
+    )}
+
+    <form id="edit-article-form" data-id={article.id} class="space-y-6 bg-slate-900 border border-slate-800 p-6 md:p-8 rounded-2xl shadow-xl">
+      <!-- Title -->
+      <div>
+        <label for="title" class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+          समाचार शीर्षक (Headline) *
+        </label>
+        <input
+          type="text"
+          id="title"
+          name="title"
+          required
+          value={article.title}
+          class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 text-base font-semibold focus:outline-none focus:border-brand-saffron"
+        />
+      </div>
+
+      <!-- Slug -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label for="slug" class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+            URL स्लग (Slug) *
+          </label>
+          <input
+            type="text"
+            id="slug"
+            name="slug"
+            required
+            value={article.slug}
+            class="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-amber-400 font-mono text-xs focus:outline-none focus:border-brand-saffron"
+          />
+        </div>
+
+        <!-- Category & District -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="category" class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+              श्रेणी *
+            </label>
+            <select
+              id="category"
+              name="category"
+              required
+              class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:border-brand-saffron"
+            >
+              {CATEGORIES.map((cat) => (
+                <option value={cat.name} selected={cat.name === article.category}>{cat.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label for="district" class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+              ज़िला *
+            </label>
+            <select
+              id="district"
+              name="district"
+              required
+              class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:border-brand-saffron"
+            >
+              <option value="हरियाणा" selected={article.district === 'हरियाणा'}>हरियाणा (राज्य)</option>
+              {HARYANA_DISTRICTS.map((dist) => (
+                <option value={dist.nameHi} selected={dist.nameHi === article.district}>{dist.nameHi} ({dist.nameEn})</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Summary -->
+      <div>
+        <label for="summary" class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+          संक्षेप (Summary) *
+        </label>
+        <textarea
+          id="summary"
+          name="summary"
+          rows="2"
+          required
+          class="w-full px-4 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-sm focus:outline-none focus:border-brand-saffron"
+        >{article.summary}</textarea>
+      </div>
+
+      <!-- Body HTML -->
+      <div>
+        <div class="flex items-center justify-between mb-1.5">
+          <label for="body_html" class="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+            विस्तृत समाचार सामग्री (HTML / Body Text) *
+          </label>
+          <span id="word-count" class="text-xs text-slate-500 font-mono">0 शब्द</span>
+        </div>
+        <textarea
+          id="body_html"
+          name="body_html"
+          rows="12"
+          required
+          class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 text-sm font-normal focus:outline-none focus:border-brand-saffron leading-relaxed font-devanagari"
+        >{article.body_html}</textarea>
+      </div>
+
+      <!-- Thumbnail & Alt -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label for="thumbnail_url" class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+            फीचर्ड इमेज URL
+          </label>
+          <input
+            type="url"
+            id="thumbnail_url"
+            name="thumbnail_url"
+            value={article.thumbnail_url || ''}
+            class="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:border-brand-saffron"
+          />
+        </div>
+
+        <div>
+          <label for="image_alt" class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+            इमेज कैप्शन / क्रेडिट
+          </label>
+          <input
+            type="text"
+            id="image_alt"
+            name="image_alt"
+            value={article.image_alt || 'प्रतीकात्मक तस्वीर (हरियाणा न्यूज़)'}
+            class="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:border-brand-saffron"
+          />
+        </div>
+      </div>
+
+      <!-- Image Preview -->
+      <div id="image-preview-container" class={article.thumbnail_url ? '' : 'hidden'}>
+        <span class="block text-xs text-slate-400 mb-1">इमेज प्रीव्यू:</span>
+        <div class="w-48 h-28 rounded-xl overflow-hidden bg-slate-950 border border-slate-800">
+          <img id="image-preview" src={article.thumbnail_url || ''} alt="Preview" class="w-full h-full object-cover" />
+        </div>
+      </div>
+
+      <!-- SEO Meta Fields -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-slate-800/80">
+        <div>
+          <label for="seo_description" class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+            SEO मेटा विवरण (Meta Description)
+          </label>
+          <input
+            type="text"
+            id="seo_description"
+            name="seo_description"
+            value={article.seo_description || ''}
+            class="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:border-brand-saffron"
+          />
+        </div>
+
+        <div>
+          <label for="tags" class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+            कीवर्ड्स / टैग्स (कॉमा से अलग करें)
+          </label>
+          <input
+            type="text"
+            id="tags"
+            name="tags"
+            value={tagsStr}
+            class="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:border-brand-saffron"
+          />
+        </div>
+      </div>
+
+      <!-- Status Selection -->
+      <div class="flex items-center justify-between gap-4 pt-4 border-t border-slate-800/80">
+        <div class="flex items-center gap-3">
+          <label class="text-xs font-semibold uppercase tracking-wider text-slate-300">स्थिति:</label>
+          <select
+            id="status"
+            name="status"
+            class="px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-brand-saffron font-medium"
+          >
+            <option value="published" selected={article.status === 'published'}>प्रकाशित (Live)</option>
+            <option value="draft" selected={article.status === 'draft'}>समीक्षाधीन ड्राफ्ट (Draft)</option>
+            <option value="unpublished" selected={article.status === 'unpublished'}>अप्रकाशित (Unpublished)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+        <a
+          href="/admin/articles"
+          class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition-colors"
+        >
+          रद्द करें
+        </a>
+        <button
+          type="submit"
+          id="save-btn"
+          class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-brand-saffron to-amber-600 hover:from-amber-500 hover:to-brand-saffron text-white text-xs font-bold shadow-lg shadow-brand-saffron/20 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+        >
+          <span id="btn-text">अद्यतन सहेजें</span>
+          <svg id="btn-spinner" class="hidden animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+          </svg>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <script is:inline>
+    const bodyTextarea = document.getElementById('body_html');
+    const wordCountSpan = document.getElementById('word-count');
+    const imageInput = document.getElementById('thumbnail_url');
+    const imagePreviewContainer = document.getElementById('image-preview-container');
+    const imagePreview = document.getElementById('image-preview');
+    const form = document.getElementById('edit-article-form');
+    const saveBtn = document.getElementById('save-btn');
+    const btnText = document.getElementById('btn-text');
+    const btnSpinner = document.getElementById('btn-spinner');
+
+    function updateCount() {
+      const words = bodyTextarea?.value.trim().split(/\s+/).filter(Boolean) || [];
+      if (wordCountSpan) wordCountSpan.textContent = `${words.length} शब्द`;
+    }
+    bodyTextarea?.addEventListener('input', updateCount);
+    updateCount();
+
+    imageInput?.addEventListener('input', () => {
+      const val = imageInput.value.trim();
+      if (val && imagePreview) {
+        imagePreview.src = val;
+        imagePreviewContainer?.classList.remove('hidden');
+      } else {
+        imagePreviewContainer?.classList.add('hidden');
+      }
+    });
+
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = form.getAttribute('data-id');
+      saveBtn.disabled = true;
+      btnText.textContent = 'सहेजा जा रहा है...';
+      btnSpinner?.classList.remove('hidden');
+
+      const formData = new FormData(form);
+      const payload = {
+        title: formData.get('title'),
+        slug: formData.get('slug'),
+        category: formData.get('category'),
+        district: formData.get('district'),
+        summary: formData.get('summary'),
+        body_html: formData.get('body_html'),
+        thumbnail_url: formData.get('thumbnail_url'),
+        image_alt: formData.get('image_alt'),
+        status: formData.get('status'),
+        seo_description: formData.get('seo_description'),
+        tags: formData.get('tags'),
+      };
+
+      try {
+        const res = await fetch(`/api/admin/articles/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || 'सहेजने में त्रुटि');
+        }
+
+        window.showAdminToast('समाचार सफलतापूर्वक अपडेट किया गया!');
+        setTimeout(() => {
+          window.location.href = '/admin/articles';
+        }, 800);
+      } catch (err) {
+        window.showAdminToast(err.message, 'error');
+        saveBtn.disabled = false;
+        btnText.textContent = 'अद्यतन सहेजें';
+        btnSpinner?.classList.add('hidden');
+      }
+    });
+  </script>
+</AdminLayout>

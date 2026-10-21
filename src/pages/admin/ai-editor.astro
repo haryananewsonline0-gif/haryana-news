@@ -1,0 +1,222 @@
+---
+// ==============================================================================
+// Admin AI Editor & Journalism Assistant
+// Route: /admin/ai-editor
+// ==============================================================================
+
+import AdminLayout from '@/layouts/AdminLayout.astro';
+
+export const prerender = false;
+---
+
+<AdminLayout title="AI पत्रकार व संपादन सहायक" activeNav="ai-editor">
+  <div class="max-w-5xl mx-auto h-[calc(100vh-8.5rem)] flex flex-col gap-4">
+    <!-- Top Action Presets Bar -->
+    <div class="flex items-center gap-2 overflow-x-auto pb-1 shrink-0 text-xs">
+      <span class="text-slate-400 font-semibold uppercase tracking-wider text-[11px] shrink-0">त्वरित कार्य:</span>
+      <button
+        type="button"
+        class="preset-btn px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 transition-all shrink-0 cursor-pointer flex items-center gap-1.5"
+        data-prompt="इस घटना/खबर के लिए 5 उच्च-क्लिक आकर्षक, तथ्यात्मक हिंदी सुर्खियां (Headlines) सुझाइए: "
+      >
+        <span>⚡ 5 आकर्षक सुर्खियां</span>
+      </button>
+      <button
+        type="button"
+        class="preset-btn px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 transition-all shrink-0 cursor-pointer flex items-center gap-1.5"
+        data-prompt="नीचे दिए गए कच्चे नोट्स / प्रेस विज्ञप्ति को 300 शब्दों के प्रवाहमयी, मानक हिंदी समाचार लेख में बदलिए (लीड पैराग्राफ, मुख्य बिंदु, और निष्कर्ष के साथ): "
+      >
+        <span>✍️ कच्चे नोट्स से पूरा समाचार</span>
+      </button>
+      <button
+        type="button"
+        class="preset-btn px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 transition-all shrink-0 cursor-pointer flex items-center gap-1.5"
+        data-prompt="इस समाचार के लिए 150 अक्षरों का Google SEO Meta Description और 10 प्रासंगिक Focus Keywords तैयार करें: "
+      >
+        <span>🔍 SEO सारांश व कीवर्ड्स</span>
+      </button>
+      <button
+        type="button"
+        class="preset-btn px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 transition-all shrink-0 cursor-pointer flex items-center gap-1.5"
+        data-prompt="इस समाचार को व्हाट्सएप ग्रुप्स और टेलीग्राम चैनल के लिए इमोजी और बुलेट पॉइंट्स के साथ आकर्षक 3-पैरा बुलेटिन में बदलें: "
+      >
+        <span>📱 व्हाट्सएप बुलेटिन फॉर्मेट</span>
+      </button>
+    </div>
+
+    <!-- Chat Messages Window -->
+    <div
+      id="chat-box"
+      class="flex-1 bg-slate-900 border border-slate-800 rounded-2xl p-4 md:p-6 overflow-y-auto space-y-4 shadow-xl"
+    >
+      <!-- Initial AI Welcome Greeting -->
+      <div class="flex items-start gap-3 max-w-3xl">
+        <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-brand-saffron to-amber-500 p-0.5 shrink-0 shadow-md">
+          <div class="w-full h-full bg-slate-900 rounded-[10px] flex items-center justify-center text-xs font-bold text-amber-400 font-outfit">
+            AI
+          </div>
+        </div>
+        <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-slate-200 text-sm leading-relaxed space-y-2">
+          <p class="font-bold text-white flex items-center gap-1.5">
+            <span>नमस्ते! मैं आपका 'हरियाणा न्यूज़ AI पत्रकार' सहायक हूँ।</span>
+          </p>
+          <p class="text-xs text-slate-400">
+            आप मुझसे हिंदी, अंग्रेजी या हिंग्लिश में कुछ भी पूछ सकते हैं। आप कोई प्रेस नोट पेस्ट कर सकते हैं, हेडलाइन सुधारने को कह सकते हैं या सोशल मीडिया पोस्ट तैयार करवा सकते हैं।
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input Form Area -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 shadow-xl shrink-0">
+      <form id="chat-form" class="space-y-2">
+        <textarea
+          id="chat-input"
+          rows="3"
+          required
+          placeholder="यहाँ अपना सवाल लिखें या समाचार का कच्चा ड्राफ्ट पेस्ट करें (उदा. 'इस खबर की हेडलाइन को और दमदार बनाओ')..."
+          class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:border-brand-saffron font-devanagari resize-none leading-relaxed"
+        ></textarea>
+
+        <div class="flex items-center justify-between pt-1">
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              id="clear-btn"
+              class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white text-xs hover:bg-slate-800 transition-colors cursor-pointer"
+            >
+              चैट साफ़ करें
+            </button>
+          </div>
+
+          <button
+            type="submit"
+            id="send-btn"
+            class="px-5 py-2 rounded-xl bg-gradient-to-r from-brand-saffron to-amber-600 hover:from-amber-500 hover:to-brand-saffron text-white text-xs font-bold shadow-md shadow-brand-saffron/20 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+          >
+            <span id="btn-text">भेजें</span>
+            <svg id="btn-spinner" class="hidden animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+            </svg>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script is:inline>
+    const chatBox = document.getElementById('chat-box');
+    const chatForm = document.getElementById('chat-form');
+    const chatInput = document.getElementById('chat-input');
+    const sendBtn = document.getElementById('send-btn');
+    const btnText = document.getElementById('btn-text');
+    const btnSpinner = document.getElementById('btn-spinner');
+    const clearBtn = document.getElementById('clear-btn');
+    const presetBtns = document.querySelectorAll('.preset-btn');
+
+    // Preset prompts
+    presetBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const text = btn.getAttribute('data-prompt') || '';
+        if (chatInput) {
+          chatInput.value = text;
+          chatInput.focus();
+        }
+      });
+    });
+
+    clearBtn?.addEventListener('click', () => {
+      if (confirm('क्या आप चैट इतिहास साफ़ करना चाहते हैं?')) {
+        window.location.reload();
+      }
+    });
+
+    function appendMessage(role, text) {
+      if (!chatBox) return;
+
+      const msgDiv = document.createElement('div');
+      if (role === 'user') {
+        msgDiv.className = 'flex items-start justify-end gap-3 max-w-3xl ml-auto';
+        msgDiv.innerHTML = `
+          <div class="p-3.5 rounded-2xl bg-brand-saffron/20 border border-brand-saffron/40 text-slate-100 text-sm leading-relaxed max-w-2xl whitespace-pre-wrap">
+            ${escapeHtml(text)}
+          </div>
+          <div class="w-8 h-8 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-bold text-slate-300 font-outfit shrink-0">
+            YOU
+          </div>
+        `;
+      } else {
+        msgDiv.className = 'flex items-start gap-3 max-w-3xl';
+        msgDiv.innerHTML = `
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-brand-saffron to-amber-500 p-0.5 shrink-0 shadow-md">
+            <div class="w-full h-full bg-slate-900 rounded-[10px] flex items-center justify-center text-xs font-bold text-amber-400 font-outfit">
+              AI
+            </div>
+          </div>
+          <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-slate-200 text-sm leading-relaxed space-y-3 max-w-2xl">
+            <div class="markdown-body whitespace-pre-wrap font-devanagari">${escapeHtml(text)}</div>
+            <div class="pt-2 border-t border-slate-800 flex items-center gap-2 text-xs">
+              <button type="button" class="copy-reply-btn px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors">
+                कॉपी करें
+              </button>
+              <a href="/admin/articles/new" class="px-2.5 py-1 rounded-lg bg-brand-green/20 text-brand-green hover:bg-brand-green hover:text-white transition-colors">
+                नया लेख बनाएं »
+              </a>
+            </div>
+          </div>
+        `;
+
+        const copyBtn = msgDiv.querySelector('.copy-reply-btn');
+        copyBtn?.addEventListener('click', () => {
+          navigator.clipboard.writeText(text);
+          copyBtn.textContent = 'कॉपी हो गया!';
+          setTimeout(() => (copyBtn.textContent = 'कॉपी करें'), 2000);
+        });
+      }
+
+      chatBox.appendChild(msgDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.innerText = str;
+      return div.innerHTML;
+    }
+
+    chatForm?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const prompt = chatInput?.value.trim();
+      if (!prompt) return;
+
+      appendMessage('user', prompt);
+      chatInput.value = '';
+
+      sendBtn.disabled = true;
+      btnText.textContent = 'लिखा जा रहा है...';
+      btnSpinner?.classList.remove('hidden');
+
+      try {
+        const res = await fetch('/api/admin/ai-chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt }),
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || 'AI प्रतिक्रिया में त्रुटि');
+        }
+
+        appendMessage('model', data.reply);
+      } catch (err) {
+        appendMessage('model', `❌ त्रुटि: ${err.message}`);
+      } finally {
+        sendBtn.disabled = false;
+        btnText.textContent = 'भेजें';
+        btnSpinner?.classList.add('hidden');
+      }
+    });
+  </script>
+</AdminLayout>

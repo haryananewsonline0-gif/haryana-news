@@ -34,6 +34,35 @@ export function getServerSupabase(runtimeEnv?: Record<string, string | undefined
 }
 
 /**
+ * Returns an admin/service-role Supabase client for server-side trusted operations.
+ */
+export function getServiceSupabase(runtimeEnv?: Record<string, string | undefined>) {
+  const url =
+    runtimeEnv?.SUPABASE_URL ||
+    runtimeEnv?.PUBLIC_SUPABASE_URL ||
+    import.meta.env.SUPABASE_URL ||
+    import.meta.env.PUBLIC_SUPABASE_URL ||
+    '';
+
+  const serviceKey =
+    runtimeEnv?.SUPABASE_SERVICE_ROLE_KEY ||
+    import.meta.env.SUPABASE_SERVICE_ROLE_KEY ||
+    runtimeEnv?.SUPABASE_ANON_KEY ||
+    runtimeEnv?.PUBLIC_SUPABASE_ANON_KEY ||
+    import.meta.env.SUPABASE_ANON_KEY ||
+    import.meta.env.PUBLIC_SUPABASE_ANON_KEY ||
+    '';
+
+  return createClient<Database>(url, serviceKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  });
+}
+
+
+/**
  * Fetch published articles for homepage or category listing
  */
 export async function getPublishedArticles(options: {

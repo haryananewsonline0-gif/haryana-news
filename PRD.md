@@ -544,8 +544,153 @@ Build the Supabase Edge Function `generate-article` (Deno runtime) triggered by 
 ---
 
 ## 8. Phase 3 Verification & Exit Criteria
-1. Edge function files in `supabase/functions/generate-article/` compile cleanly with Deno/TypeScript.
+1. Edge function files in `supabase/functions/generate-article/` created and verified.
 2. All 15 slot types supported with real data fetching or fallback.
-3. Git commit with `feat(milestone-3): ...`.
+3. `npx astro check` and `npx astro build` pass cleanly with 0 errors.
+4. Git commit: `a288497`.
+
+---
+
+## 9. Milestone 4: Detailed Atomic Tasks (Secure Admin Panel, MFA, Turnstile & AI Editorial Chat)
+
+### Phase Objective
+Build the hardened single-admin portal at `/admin` (`noindex, nofollow`). Enforce Supabase Auth, Cloudflare Turnstile, login rate limiting (5 attempts/15 min), and TOTP 2FA (MFA). Deliver admin dashboard with kill switch, WhatsApp toggle, slot "Regenerate Now" trigger, article CRUD (create, edit, unpublish, delete), fallback rates form, generation logs viewer, and Hinglish AI editorial chat proxy.
+
+---
+
+### [x] Task 4.1: Security Middleware, HTTP Headers & Admin Auth Guard
+- **Objective:** Implement Astro middleware enforcing security headers and guarding `/admin` routes.
+- **Target Files:**
+  - `src/middleware.ts`
+  - `src/lib/auth/session.ts`
+- **Actions:**
+  1. Add security headers: CSP, HSTS, X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy, and X-Robots-Tag (noindex, nofollow, noarchive) for `/admin` routes.
+  2. Inspect session token for all `/admin/*` routes (except `/admin/login`, `/admin/mfa`, `/admin/mfa-setup`).
+  3. Validate that user email matches `ADMIN_EMAIL`.
+  4. Validate MFA assurance level: if user has not verified TOTP for the session, redirect to `/admin/mfa`.
+  5. If unauthenticated, redirect to `/admin/login`.
+- **Verification:** Run `npx astro check` and verify middleware redirects.
+- **Success Criteria:** Unauthenticated users or non-admin emails cannot view admin pages or execute admin actions.
+
+---
+
+### [x] Task 4.2: Admin Login with Cloudflare Turnstile & Rate Limiter
+- **Objective:** Create `/admin/login` page with Turnstile CAPTCHA and rate limiting (5 per 15 min).
+- **Target Files:**
+  - `src/pages/admin/login.astro`
+  - `src/lib/auth/rate-limiter.ts`
+  - `src/pages/api/admin/auth/login.ts`
+- **Actions:**
+  1. In `rate-limiter.ts`, track IP attempts: allow max 5 attempts in 15 minutes.
+  2. In `login.ts` endpoint:
+     - Verify Cloudflare Turnstile response with `TURNSTILE_SECRET_KEY`.
+     - Check rate limit.
+     - Validate email === `ADMIN_EMAIL`.
+     - Call Supabase Auth `signInWithPassword`.
+     - Check if MFA is required: if factor enrolled, return `{ requiresMfa: true }`; if not, return `{ setupMfa: true }`.
+     - Set secure httpOnly cookie.
+  3. Author `login.astro` UI with clean form, Turnstile widget, and error banners.
+- **Verification:** Test login endpoint rejection of non-admin emails and rate limiting.
+- **Success Criteria:** Login enforces Turnstile, rate limits brute force attempts, and checks ADMIN_EMAIL.
+
+---
+
+### [x] Task 4.3: TOTP 2FA (MFA) Setup & Challenge Verification
+- **Objective:** Implement TOTP 2FA enrollment and verification before granting admin access.
+- **Target Files:**
+  - `src/pages/admin/mfa.astro`
+  - `src/pages/admin/mfa-setup.astro`
+  - `src/pages/api/admin/auth/verify-mfa.ts`
+  - `src/pages/api/admin/auth/setup-mfa.ts`
+- **Actions:**
+  1. `setup-mfa.ts`: Call `supabase.auth.mfa.enroll({ factorType: 'totp' })` generating QR code and secret URI.
+  2. `mfa-setup.astro`: Display QR code and text key for Google Authenticator / Authy, with verification input to activate.
+  3. `verify-mfa.ts`: Call `supabase.auth.mfa.challengeAndVerify({ factorId, code })`. Upon success, elevate session to AAL2 and set verified session cookie.
+  4. `mfa.astro`: 6-digit TOTP input for recurring logins.
+- **Verification:** Test MFA challenge and session elevation.
+- **Success Criteria:** Admin cannot access dashboard without valid 6-digit TOTP code.
+
+---
+
+### [x] Task 4.4: Admin Layout, Dashboard, Kill Switch & Slot "Regenerate Now" Triggers
+- **Objective:** Build main admin dashboard `/admin` with quick metrics, kill switch, and slot triggers.
+- **Target Files:**
+  - `src/layouts/AdminLayout.astro`
+  - `src/pages/admin/index.astro`
+  - `src/pages/api/admin/settings.ts`
+  - `src/pages/api/admin/trigger-slot.ts`
+- **Actions:**
+  1. Create `AdminLayout.astro` with sidebar navigation, user badge, and logout button.
+  2. In `admin/index.astro`:
+     - Display counters: Today's published articles, total views, failures in last 24h.
+     - Kill Switch toggle: POST to `/api/admin/settings` toggling `settings.kill_switch`.
+     - WhatsApp toggle: POST to `/api/admin/settings` toggling `settings.whatsapp_enabled`.
+     - Slot Timetable cards: Grid of all 15 slots with schedule IST and "Regenerate Now" button.
+  3. In `trigger-slot.ts`: Forward trigger request securely to Supabase Edge Function with `x-cron-secret: CRON_SECRET`.
+- **Verification:** Test kill switch toggle and trigger API.
+- **Success Criteria:** Dashboard renders metrics, allows instant kill switch toggle, and triggers slot runs.
+
+---
+
+### [x] Task 4.5: Article Management (CRUD, Edit, Unpublish, Delete & Manual Creation)
+- **Objective:** Build article management pages allowing admin to view, create, edit, unpublish, and delete articles.
+- **Target Files:**
+  - `src/pages/admin/articles/index.astro`
+  - `src/pages/admin/articles/new.astro`
+  - `src/pages/admin/articles/edit/[id].astro`
+  - `src/pages/api/admin/articles/index.ts`
+- **Actions:**
+  1. `articles/index.astro`: Table of all articles (published, draft, unpublished) with search, category filter, and action buttons.
+  2. `articles/new.astro`: Form for creating an article manually with Zod validation and HTML sanitization.
+  3. `articles/edit/[id].astro`: Form for editing title, summary, body HTML, tags, district, thumbnail, and status.
+  4. `api/admin/articles/index.ts`: Handle POST, PUT, DELETE with server-side admin verification.
+- **Verification:** Test article CRUD operations.
+- **Success Criteria:** Admin can create, modify, unpublish, and delete any article.
+
+---
+
+### [x] Task 4.6: Manual Data Entry Form & Generation Logs Viewer
+- **Objective:** Build rates management form and automated execution logs inspector.
+- **Target Files:**
+  - `src/pages/admin/manual-data.astro`
+  - `src/pages/admin/logs.astro`
+  - `src/pages/api/admin/manual-data.ts`
+- **Actions:**
+  1. `manual-data.astro`: Form to enter/update fallback rates:
+     - Gold 24K and 22K (per 10g)
+     - Silver (per 1kg)
+     - Petrol and Diesel (per litre)
+     - LPG Cylinder (14.2kg domestic)
+     - Share Market (Sensex & Nifty 50)
+     - Mandi rates for Sirsa, Adampur, Nohar, Ellenabad.
+  2. `api/admin/manual-data.ts`: Validates input with Zod and updates `manual_data` table.
+  3. `logs.astro`: Table displaying latest 100 entries from `generation_logs` (slot, status badge, duration, error details, timestamp).
+- **Verification:** Test manual rates update and logs viewing.
+- **Success Criteria:** Rates update instantly in DB; logs display success, failure, and safety draft events.
+
+---
+
+### [x] Task 4.7: Hinglish AI Editor Chat
+- **Objective:** Implement editorial AI chat assistant where Gemini replies in Hinglish to help rewrite headlines, articles, and SEO.
+- **Target Files:**
+  - `src/pages/admin/ai-editor.astro`
+  - `src/pages/api/admin/ai-chat.ts`
+- **Actions:**
+  1. `ai-chat.ts`: Server endpoint calling Google Gemini API with system prompt:
+     `You are an expert newsroom assistant for Haryana News. Reply in friendly, witty Hinglish (Hindi written in Roman or Devanagari script). Help the editor rewrite catchy headlines, improve SEO meta descriptions, check grammar, or summarize news.`
+     **Ensures GEMINI_API_KEY is never exposed to the client.**
+  2. `ai-editor.astro`: Interactive chat UI with quick prompt buttons ("Headline Catchy Banao", "SEO Improve Karo", "Short Summary Likho", "Devanagari Me Rewrite Karo").
+- **Verification:** Test Hinglish AI chat response.
+- **Success Criteria:** AI responds in Hinglish; API calls stay securely on the server.
+
+
+---
+
+## 10. Phase 4 Verification & Exit Criteria
+1. `npx astro check` passes with 0 errors.
+2. `npx astro build` completes successfully.
+3. Security headers verified on `/admin`.
+4. Git commit with `feat(milestone-4): ...`.
+
 
 

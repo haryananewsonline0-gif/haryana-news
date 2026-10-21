@@ -1,122 +1,132 @@
 ---
-phase: 3
-plan: "Auto-Publishing Pipeline, Edge Functions & External API Integrations"
-wave: 3
+phase: 4
+plan: "Secure Admin Panel, MFA, Turnstile & AI Editorial Chat"
+wave: 4
 gap_closure: false
 ---
 
-# Plan 3: Auto-Publishing Pipeline & Edge Functions
+# Plan 4: Secure Admin Panel, MFA, Turnstile & AI Editorial Chat
 
 ## Objective
-Build the Supabase Edge Function `generate-article` (Deno runtime) triggered by cron-job.org with `x-cron-secret` timing-safe check. Ensure real data fetching first (Open-Meteo, data.gov.in, CricAPI, rates, panchang, Hindi RSS) with zero number hallucinations, Google Gemini API structured JSON generation, 48h duplicate hash check, sensitive safety filters, Pollinations.ai -> ImageKit thumbnail upload with branded saffron/green gradient fallback, Green API WhatsApp broadcasts with 3-8s random delay, and execution logging.
+Build the hardened single-admin management portal at `/admin` (`noindex, nofollow`). Implement security middleware with mandatory security headers, Supabase Auth + Cloudflare Turnstile + login rate limiting (5 attempts/15 min), and TOTP 2FA (MFA). Deliver an admin dashboard with metrics, kill switch, WhatsApp toggle, slot "Regenerate Now" trigger, article CRUD, fallback rates editor, generation logs viewer, and a Hinglish AI editorial chat assistant running through a server-side Gemini proxy.
 
 ## Context
-- `PRD.md` — Section 7 (Milestone 3 Tasks)
-- `.gsd/SPEC.md` — Core specifications (Sections 6 & 7)
-- `supabase/migrations/20261021000000_initial_schema.sql` — DB Schema
-- `supabase/migrations/20261021000002_seed_data.sql` — 15 Slots seed
+- `PRD.md` — Section 9 (Milestone 4 Tasks)
+- `.gsd/SPEC.md` — Section 5 (Admin Panel & Security)
+- `src/types/database.ts` — Data models
 
 ---
 
 ## Tasks
 
 <task type="auto">
-  <name>Task 3.1: External Data Fetchers (Real Numbers First)</name>
+  <name>Task 4.1: Security Middleware, HTTP Headers & Admin Auth Guard</name>
   <files>
-    supabase/functions/generate-article/types.ts
-    supabase/functions/generate-article/data-fetchers/weather.ts
-    supabase/functions/generate-article/data-fetchers/mandi.ts
-    supabase/functions/generate-article/data-fetchers/cricket.ts
-    supabase/functions/generate-article/data-fetchers/rates.ts
-    supabase/functions/generate-article/data-fetchers/panchang.ts
-    supabase/functions/generate-article/data-fetchers/rss.ts
+    src/middleware.ts
+    src/lib/auth/session.ts
   </files>
   <action>
-    1. Define SlotPayload and data types in types.ts.
-    2. Build weather.ts fetching Open-Meteo for Sirsa, Fatehabad, Hisar, Adampur, Ellenabad, Bhadra, Nohar.
-    3. Build mandi.ts querying data.gov.in API with fallback to manual_data.
-    4. Build cricket.ts querying CricAPI currentMatches.
-    5. Build rates.ts for Gold 24K/22K, Silver, Petrol, Diesel, LPG with manual_data fallback.
-    6. Build panchang.ts computing Tithi, Nakshatra, Rahukaal, Choghadiya for Haryana coordinates.
-    7. Build rss.ts fetching public Hindi RSS news feeds for Govt schemes, Jobs, Tech, Regional news.
+    1. Implement src/lib/auth/session.ts to verify Supabase JWT token and extract email and MFA status.
+    2. Implement src/middleware.ts applying CSP, HSTS, X-Frame-Options: DENY, X-Content-Type-Options: nosniff, Referrer-Policy, and X-Robots-Tag: noindex, nofollow, noarchive.
+    3. Protect all /admin/* routes (excluding /admin/login and /admin/mfa): if not authenticated or not ADMIN_EMAIL, redirect to /admin/login. If MFA pending, redirect to /admin/mfa.
   </action>
-  <verify>Syntax and type check</verify>
-  <done>All data fetchers return real numbers or structured fallback</done>
+  <verify>npx astro check</verify>
+  <done>Middleware guards /admin and adds security headers</done>
 </task>
 
 <task type="auto">
-  <name>Task 3.2: Google Gemini AI Narrative Generation Engine</name>
+  <name>Task 4.2: Admin Login with Cloudflare Turnstile & Rate Limiter</name>
   <files>
-    supabase/functions/generate-article/gemini.ts
+    src/lib/auth/rate-limiter.ts
+    src/pages/api/admin/auth/login.ts
+    src/pages/admin/login.astro
   </files>
   <action>
-    1. Implement callGeminiGenerateArticle sending real fetched data to Gemini API.
-    2. Read model from GEMINI_MODEL (default: gemini-2.5-flash). Fail with explicit error if model invalid.
-    3. Enforce response_format JSON schema: { title, summary, body_html, tags, seo_title, seo_description, image_prompt }.
-    4. Enforce Hindi Devanagari, neutral journalistic style, and source attribution.
+    1. Implement in-memory IP rate limiter (max 5 attempts per 15 min).
+    2. Build login API verifying Turnstile token, checking rate limits, validating ADMIN_EMAIL, and checking Supabase MFA factors.
+    3. Build login.astro UI with Turnstile widget and Hindi error notices.
   </action>
-  <verify>Validate Gemini API schema generation</verify>
-  <done>Gemini client generates validated structured JSON</done>
+  <verify>npx astro check</verify>
+  <done>Login route handles Turnstile, rate limits, and credentials</done>
 </task>
 
 <task type="auto">
-  <name>Task 3.3: Content Hashing, Duplicate Detection & Sensitive Safety Filter</name>
+  <name>Task 4.3: TOTP 2FA (MFA) Setup & Challenge Verification</name>
   <files>
-    supabase/functions/generate-article/duplicate.ts
-    supabase/functions/generate-article/safety.ts
+    src/pages/api/admin/auth/verify-mfa.ts
+    src/pages/api/admin/auth/setup-mfa.ts
+    src/pages/admin/mfa.astro
+    src/pages/admin/mfa-setup.astro
   </files>
   <action>
-    1. Implement SHA-256 content hashing in duplicate.ts and 48h similarity check against Supabase articles table.
-    2. Implement safety filter in safety.ts checking for individual crime accusations, religion/caste conflict, deaths, political scandals.
-    3. If sensitive, flag status = 'draft' and notify owner; otherwise status = 'published'.
+    1. Build setup-mfa.ts and mfa-setup.astro for enrolling TOTP with QR code.
+    2. Build verify-mfa.ts and mfa.astro for 6-digit TOTP challenge verification.
   </action>
-  <verify>Test hashing and safety filters</verify>
-  <done>Duplicates skipped; sensitive articles marked draft</done>
+  <verify>npx astro check</verify>
+  <done>MFA enrollment and verification workflow operational</done>
 </task>
 
 <task type="auto">
-  <name>Task 3.4: Thumbnail Engine (Pollinations.ai -> ImageKit & Branded Card Fallback)</name>
+  <name>Task 4.4: Admin Layout, Dashboard, Kill Switch & Slot Triggers</name>
   <files>
-    supabase/functions/generate-article/image.ts
+    src/layouts/AdminLayout.astro
+    src/pages/admin/index.astro
+    src/pages/api/admin/settings.ts
+    src/pages/api/admin/trigger-slot.ts
   </files>
   <action>
-    1. Generate safe realistic scene prompt from headline (no real persons, no fake events, no logos).
-    2. Fetch 1200x630 image from Pollinations.ai with 10s timeout.
-    3. Upload binary buffer to ImageKit API in folder /haryana-news/ using ImageKit authentication keys.
-    4. If Pollinations fails/times out, generate branded SVG/PNG card (headline on saffron/green gradient with logo) and upload to ImageKit.
-    5. Return ImageKit URL.
+    1. Create AdminLayout.astro with responsive navigation and logout.
+    2. Build admin/index.astro with summary metrics (today's articles, views, failures).
+    3. Implement kill switch and WhatsApp toggles via api/admin/settings.ts.
+    4. Build slot cards with "Regenerate Now" buttons triggering Edge Function securely via api/admin/trigger-slot.ts.
   </action>
-  <verify>Validate ImageKit upload logic and card generation</verify>
-  <done>ImageKit URL stored in DB; reliable gradient card fallback on failure</done>
+  <verify>npx astro check</verify>
+  <done>Dashboard renders metrics and manages system controls</done>
 </task>
 
 <task type="auto">
-  <name>Task 3.5: Green API WhatsApp Broadcasting & Owner Alerting</name>
+  <name>Task 4.5: Article Management (CRUD)</name>
   <files>
-    supabase/functions/generate-article/whatsapp.ts
+    src/pages/admin/articles/index.astro
+    src/pages/admin/articles/new.astro
+    src/pages/admin/articles/edit/[id].astro
+    src/pages/api/admin/articles/index.ts
   </files>
   <action>
-    1. Implement sendWhatsAppMessage using Green API sendMessage.
-    2. Broadcast published article to WHATSAPP_GROUP_CHAT_ID with random 3-8s delay.
-    3. If draft flagged by safety filter, send alert message to OWNER_CHAT_ID.
-    4. Non-blocking error handling: never fail article if WhatsApp fails.
+    1. Build articles/index.astro listing all articles with status badges and filters.
+    2. Build articles/new.astro and edit/[id].astro forms with Zod validation.
+    3. Implement api/admin/articles/index.ts handling create, update, unpublish, and delete.
   </action>
-  <verify>Validate Green API payload and delay handling</verify>
-  <done>WhatsApp broadcast sends with random delay; failures logged non-blockingly</done>
+  <verify>npx astro check</verify>
+  <done>Full article CRUD operations functional</done>
 </task>
 
 <task type="auto">
-  <name>Task 3.6: Main Edge Function Orchestrator</name>
+  <name>Task 4.6: Manual Data Entry Form & Generation Logs Viewer</name>
   <files>
-    supabase/functions/generate-article/index.ts
+    src/pages/admin/manual-data.astro
+    src/pages/admin/logs.astro
+    src/pages/api/admin/manual-data.ts
   </files>
   <action>
-    1. Handle POST/GET ?slot=<slot_key>.
-    2. Timing-safe comparison of x-cron-secret header with CRON_SECRET. Return 401 if unauthorized.
-    3. Check settings.kill_switch.
-    4. Route slot to data fetcher -> Gemini narrative -> Duplicate check -> Safety filter -> Thumbnail/ImageKit -> Insert article -> WhatsApp -> Generation log.
-    5. Return JSON execution result.
+    1. Build manual-data.astro with input forms for Gold, Silver, Petrol, Diesel, LPG, and Market rates.
+    2. Build logs.astro rendering recent generation runs with duration and errors.
+    3. Implement api/admin/manual-data.ts updating database.
   </action>
-  <verify>Test complete Edge Function execution flow</verify>
-  <done>Edge function orchestrates complete pipeline for all 15 slots</done>
+  <verify>npx astro check</verify>
+  <done>Manual rates editable and automated logs viewable</done>
+</task>
+
+<task type="auto">
+  <name>Task 4.7: Hinglish AI Editor Chat</name>
+  <files>
+    src/pages/api/admin/ai-chat.ts
+    src/pages/admin/ai-editor.astro
+  </files>
+  <action>
+    1. Implement api/admin/ai-chat.ts proxying prompts to Gemini with a dedicated Hinglish editorial persona.
+    2. Build ai-editor.astro with chat message stream, quick actions, and copy-to-editor shortcuts.
+  </action>
+  <verify>npx astro check</verify>
+  <done>Hinglish AI editor chat functioning securely on the server</done>
 </task>

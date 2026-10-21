@@ -1,0 +1,362 @@
+---
+// ==============================================================================
+// Admin Manual Rates & Fallback Data Management
+// Route: /admin/manual-data
+// ==============================================================================
+
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import { getServiceSupabase } from '@/lib/supabase/server';
+
+import type { ManualData } from '@/types/database';
+
+export const prerender = false;
+
+const runtimeEnv = Astro.locals?.runtime?.env;
+const supabase = getServiceSupabase(runtimeEnv);
+
+const { data: manualDataList } = await supabase.from('manual_data').select('*');
+
+const dataMap: Record<string, any> = {};
+for (const item of (manualDataList as ManualData[] | null) || []) {
+  dataMap[item.key] = item.value;
+}
+
+const goldSilver = dataMap['gold_silver'] || {
+  gold_24k: 73500,
+  gold_22k: 67375,
+  silver_1kg: 84500,
+};
+
+const fuelRates = dataMap['fuel_rates'] || {
+  petrol_avg: 95.28,
+  diesel_avg: 88.14,
+  lpg_14kg: 803.00,
+};
+
+const mandiRates = dataMap['mandi_rates'] || {
+  wheat: 2275,
+  mustard: 5650,
+  paddy_basmati: 3800,
+  cotton: 7100,
+};
+
+const marketRates = dataMap['market_rates'] || {
+  sensex: '81,500',
+  nifty: '24,850',
+};
+---
+
+<AdminLayout title="मंडी व दैनिक भाव दरें" activeNav="manual-data">
+  <div class="space-y-8 max-w-5xl mx-auto">
+    <!-- Notice Card -->
+    <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-md flex items-start gap-3">
+      <div class="p-2 rounded-xl bg-amber-500/10 text-brand-saffron shrink-0">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <div>
+        <h3 class="text-sm font-bold text-white">सख्त सत्यता नियम (Strict Zero-Hallucination Policy)</h3>
+        <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+          सोने-चांदी, ईंधन, शेयर बाज़ार और कृषि उपज मंडियों के आंकड़े AI द्वारा कभी मनगढ़ंत नहीं लिखे जाते। यदि सरकारी API अनुपलब्ध हो, तो सिस्टम नीचे दी गई दरों का उपयोग करता है। इन्हें नियमित रूप से ताज़ा रखें।
+        </p>
+      </div>
+    </div>
+
+    <!-- 1. Gold & Silver Rates -->
+    <form class="rate-form bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl space-y-4" data-key="gold_silver">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h4 class="text-sm font-bold text-white flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+          सोना व चांदी के भाव (हरियाणा बाज़ार)
+        </h4>
+        <span class="text-xs text-slate-400">दैनिक सराफा दरें</span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">
+            24 कैरेट सोना (₹ प्रति 10 ग्राम)
+          </label>
+          <input
+            type="number"
+            step="1"
+            name="gold_24k"
+            value={goldSilver.gold_24k}
+            required
+            class="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-amber-400 font-mono text-sm focus:outline-none focus:border-brand-saffron"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">
+            22 कैरेट सोना (₹ प्रति 10 ग्राम)
+          </label>
+          <input
+            type="number"
+            step="1"
+            name="gold_22k"
+            value={goldSilver.gold_22k}
+            required
+            class="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-amber-400 font-mono text-sm focus:outline-none focus:border-brand-saffron"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">
+            चांदी (₹ प्रति 1 किलोग्राम)
+          </label>
+          <input
+            type="number"
+            step="1"
+            name="silver_1kg"
+            value={goldSilver.silver_1kg}
+            required
+            class="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 font-mono text-sm focus:outline-none focus:border-brand-saffron"
+          />
+        </div>
+      </div>
+
+      <div class="flex justify-end pt-2">
+        <button
+          type="submit"
+          class="save-btn px-4 py-2 rounded-xl bg-brand-saffron hover:bg-amber-600 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+        >
+          <span>सोना-चांदी दरें सहेजें</span>
+        </button>
+      </div>
+    </form>
+
+    <!-- 2. Fuel & LPG Rates -->
+    <form class="rate-form bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl space-y-4" data-key="fuel_rates">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h4 class="text-sm font-bold text-white flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-blue-400"></span>
+          ईंधन व एलपीजी दरें (हरियाणा औसत)
+        </h4>
+        <span class="text-xs text-slate-400">दैनिक तेल कंपनियां दरें</span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">
+            पेट्रोल (₹ प्रति लीटर)
+          </label>
+          <input
+            type="number"
+            step="0.01"
+            name="petrol_avg"
+            value={fuelRates.petrol_avg}
+            required
+            class="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-sky-400 font-mono text-sm focus:outline-none focus:border-brand-saffron"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">
+            डीज़ल (₹ प्रति लीटर)
+          </label>
+          <input
+            type="number"
+            step="0.01"
+            name="diesel_avg"
+            value={fuelRates.diesel_avg}
+            required
+            class="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-sky-400 font-mono text-sm focus:outline-none focus:border-brand-saffron"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">
+            घरेलू एलपीजी 14.2kg सिलेंडर (₹)
+          </label>
+          <input
+            type="number"
+            step="0.01"
+            name="lpg_14kg"
+            value={fuelRates.lpg_14kg}
+            required
+            class="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-sky-400 font-mono text-sm focus:outline-none focus:border-brand-saffron"
+          />
+        </div>
+      </div>
+
+      <div class="flex justify-end pt-2">
+        <button
+          type="submit"
+          class="save-btn px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+        >
+          <span>ईंधन दरें सहेजें</span>
+        </button>
+      </div>
+    </form>
+
+    <!-- 3. Haryana Mandi Rates -->
+    <form class="rate-form bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl space-y-4" data-key="mandi_rates">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h4 class="text-sm font-bold text-white flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+          हरियाणा कृषि उपज मंडी भाव (प्रति क्विंटल ₹)
+        </h4>
+        <span class="text-xs text-slate-400">सिरसा, हिसार, करनाल, कैथल मंडियां</span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">
+            गेहूं (प्रति क्विंटल)
+          </label>
+          <input
+            type="number"
+            step="1"
+            name="wheat"
+            value={mandiRates.wheat}
+            required
+            class="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-emerald-400 font-mono text-sm focus:outline-none focus:border-brand-saffron"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">
+            सरसों (प्रति क्विंटल)
+          </label>
+          <input
+            type="number"
+            step="1"
+            name="mustard"
+            value={mandiRates.mustard}
+            required
+            class="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-emerald-400 font-mono text-sm focus:outline-none focus:border-brand-saffron"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">
+            बासमती धान (प्रति क्विंटल)
+          </label>
+          <input
+            type="number"
+            step="1"
+            name="paddy_basmati"
+            value={mandiRates.paddy_basmati}
+            required
+            class="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-emerald-400 font-mono text-sm focus:outline-none focus:border-brand-saffron"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">
+            नरमा / कपास (प्रति क्विंटल)
+          </label>
+          <input
+            type="number"
+            step="1"
+            name="cotton"
+            value={mandiRates.cotton}
+            required
+            class="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-emerald-400 font-mono text-sm focus:outline-none focus:border-brand-saffron"
+          />
+        </div>
+      </div>
+
+      <div class="flex justify-end pt-2">
+        <button
+          type="submit"
+          class="save-btn px-4 py-2 rounded-xl bg-brand-green hover:bg-emerald-700 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+        >
+          <span>मंडी भाव सहेजें</span>
+        </button>
+      </div>
+    </form>
+
+    <!-- 4. Stock Market Indices -->
+    <form class="rate-form bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl space-y-4" data-key="market_rates">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h4 class="text-sm font-bold text-white flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-purple-400"></span>
+          शेयर बाज़ार प्रमुख सूचकांक
+        </h4>
+        <span class="text-xs text-slate-400">Sensex & Nifty स्तर</span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">
+            BSE Sensex
+          </label>
+          <input
+            type="text"
+            name="sensex"
+            value={marketRates.sensex}
+            required
+            class="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-purple-300 font-mono text-sm focus:outline-none focus:border-brand-saffron"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">
+            NSE Nifty 50
+          </label>
+          <input
+            type="text"
+            name="nifty"
+            value={marketRates.nifty}
+            required
+            class="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-purple-300 font-mono text-sm focus:outline-none focus:border-brand-saffron"
+          />
+        </div>
+      </div>
+
+      <div class="flex justify-end pt-2">
+        <button
+          type="submit"
+          class="save-btn px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+        >
+          <span>बाज़ार सूचकांक सहेजें</span>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <script is:inline>
+    const forms = document.querySelectorAll('.rate-form');
+    forms.forEach((form) => {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const key = form.getAttribute('data-key');
+        const submitBtn = form.querySelector('.save-btn');
+        const originalText = submitBtn.textContent;
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'सहेजा जा रहा है...';
+
+        const formData = new FormData(form);
+        const valueObj = {};
+        formData.forEach((val, k) => {
+          const num = Number(val);
+          valueObj[k] = isNaN(num) || typeof val !== 'string' || val.includes(',') ? val : num;
+        });
+
+        try {
+          const res = await fetch('/api/admin/manual-data', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key, value: valueObj }),
+          });
+
+          const data = await res.json();
+          if (!res.ok || !data.success) {
+            throw new Error(data.error || 'सहेजने में त्रुटि');
+          }
+
+          window.showAdminToast(`दरें [${key}] सफलतापूर्वक अपडेट की गईं!`);
+        } catch (err) {
+          window.showAdminToast(err.message, 'error');
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalText;
+        }
+      });
+    });
+  </script>
+</AdminLayout>

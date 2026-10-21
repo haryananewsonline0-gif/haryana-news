@@ -1,0 +1,270 @@
+---
+// ==============================================================================
+// Admin Panel Base Layout
+// Dark theme, responsive sidebar drawer, live IST clock, security headers
+// ==============================================================================
+
+import { verifyAdminSession } from '@/lib/auth/session';
+
+interface Props {
+  title: string;
+  activeNav?: 'dashboard' | 'articles' | 'new-article' | 'manual-data' | 'ai-editor' | 'logs';
+}
+
+const { title, activeNav = 'dashboard' } = Astro.props;
+const runtimeEnv = Astro.locals?.runtime?.env;
+const session = await verifyAdminSession(Astro.cookies, runtimeEnv);
+
+if (!session.isAuthenticated || !session.isAdmin || !session.isMfaVerified) {
+  return Astro.redirect('/admin/login');
+}
+
+const navItems = [
+  {
+    id: 'dashboard',
+    label: 'डैशबोर्ड व स्लॉट्स',
+    href: '/admin',
+    icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6',
+  },
+  {
+    id: 'articles',
+    label: 'सभी समाचार',
+    href: '/admin/articles',
+    icon: 'M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z',
+  },
+  {
+    id: 'new-article',
+    label: 'नया लेख लिखें',
+    href: '/admin/articles/new',
+    icon: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z',
+  },
+  {
+    id: 'manual-data',
+    label: 'मंडी व भाव दरें',
+    href: '/admin/manual-data',
+    icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
+  },
+  {
+    id: 'ai-editor',
+    label: 'AI संपादक (Hinglish)',
+    href: '/admin/ai-editor',
+    icon: 'M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z',
+  },
+  {
+    id: 'logs',
+    label: 'सिस्टम लॉग्स',
+    href: '/admin/logs',
+    icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+  },
+];
+---
+
+<!doctype html>
+<html lang="hi" class="h-full bg-slate-950">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <title>{title} | हरियाणा न्यूज़ एडमिन</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="h-full font-devanagari text-slate-100 flex overflow-hidden selection:bg-brand-saffron selection:text-white">
+    <!-- Mobile Sidebar Backdrop -->
+    <div id="sidebar-backdrop" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 hidden md:hidden"></div>
+
+    <!-- Sidebar Drawer -->
+    <aside
+      id="admin-sidebar"
+      class="fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 border-r border-slate-800 flex flex-col transition-transform duration-300 transform -translate-x-full md:relative md:translate-x-0"
+    >
+      <!-- Brand Header -->
+      <div class="h-16 px-5 flex items-center justify-between border-b border-slate-800 shrink-0">
+        <a href="/admin" class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-saffron via-white to-brand-green p-0.5 shadow-md">
+            <div class="w-full h-full bg-slate-900 rounded-[10px] flex items-center justify-center font-outfit font-black text-xs text-brand-saffron">
+              HN
+            </div>
+          </div>
+          <div>
+            <span class="font-bold text-sm tracking-tight text-white block">हरियाणा न्यूज़</span>
+            <span class="text-[10px] uppercase font-semibold text-brand-saffron font-outfit block -mt-1 tracking-wider">Control Panel</span>
+          </div>
+        </a>
+        <button id="close-sidebar" class="md:hidden text-slate-400 hover:text-white p-1">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+        {navItems.map((item) => {
+          const isActive = activeNav === item.id;
+          return (
+            <a
+              href={item.href}
+              class={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                isActive
+                  ? 'bg-gradient-to-r from-brand-saffron to-amber-600 text-white shadow-md shadow-brand-saffron/20 font-semibold'
+                  : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+              }`}
+            >
+              <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d={item.icon} />
+              </svg>
+              <span>{item.label}</span>
+            </a>
+          );
+        })}
+
+        <div class="pt-4 mt-4 border-t border-slate-800/80">
+          <a
+            href="/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium text-slate-400 hover:bg-slate-800/60 hover:text-white transition-all"
+          >
+            <span class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              <span>मुख्य वेबसाइट खोलें</span>
+            </span>
+            <span class="text-[10px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-400">Live</span>
+          </a>
+        </div>
+      </nav>
+
+      <!-- User Account & Logout Footer -->
+      <div class="p-3 border-t border-slate-800 shrink-0 bg-slate-900/50">
+        <div class="flex items-center justify-between p-2 rounded-xl bg-slate-800/60 border border-slate-700/40">
+          <div class="truncate mr-2">
+            <span class="block text-xs font-semibold text-slate-200 truncate">{session.email}</span>
+            <span class="block text-[10px] text-brand-green flex items-center gap-1 font-mono">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              2FA Active
+            </span>
+          </div>
+          <a
+            href="/api/admin/auth/logout"
+            title="लॉगआउट करें"
+            class="p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors cursor-pointer shrink-0"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+      <!-- Top Navigation Bar -->
+      <header class="h-16 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 md:px-8 flex items-center justify-between shrink-0 z-30">
+        <div class="flex items-center gap-3">
+          <button id="open-sidebar" class="md:hidden text-slate-400 hover:text-white p-1">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          <h2 class="text-base md:text-lg font-bold text-white tracking-tight">{title}</h2>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <!-- Live IST Clock -->
+          <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700/60 text-xs font-mono text-slate-300">
+            <span class="w-2 h-2 rounded-full bg-brand-saffron animate-ping"></span>
+            <span id="ist-clock">--:--:-- IST</span>
+          </div>
+
+          <a
+            href="/admin/articles/new"
+            class="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-green hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm transition-all"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            <span>नया समाचार</span>
+          </a>
+        </div>
+      </header>
+
+      <!-- Scrollable Main View -->
+      <main class="flex-1 overflow-y-auto p-4 md:p-8 bg-slate-950">
+        <slot />
+      </main>
+    </div>
+
+    <!-- Global Toast Alert Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <script is:inline>
+      // Live IST Clock
+      function updateClock() {
+        const now = new Date();
+        const options = {
+          timeZone: 'Asia/Kolkata',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false,
+        };
+        const clockEl = document.getElementById('ist-clock');
+        if (clockEl) {
+          clockEl.textContent = `${now.toLocaleTimeString('en-GB', options)} IST`;
+        }
+      }
+      setInterval(updateClock, 1000);
+      updateClock();
+
+      // Mobile drawer toggle
+      const sidebar = document.getElementById('admin-sidebar');
+      const backdrop = document.getElementById('sidebar-backdrop');
+      const openBtn = document.getElementById('open-sidebar');
+      const closeBtn = document.getElementById('close-sidebar');
+
+      function openMenu() {
+        sidebar?.classList.remove('-translate-x-full');
+        backdrop?.classList.remove('hidden');
+      }
+
+      function closeMenu() {
+        sidebar?.classList.add('-translate-x-full');
+        backdrop?.classList.add('hidden');
+      }
+
+      openBtn?.addEventListener('click', openMenu);
+      closeBtn?.addEventListener('click', closeMenu);
+      backdrop?.addEventListener('click', closeMenu);
+
+      // Global toast helper
+      window.showAdminToast = function(message, type = 'success') {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+
+        const toast = document.createElement('div');
+        toast.className = `px-4 py-3 rounded-xl shadow-xl border text-sm font-medium transition-all transform duration-300 pointer-events-auto flex items-center gap-2 ${
+          type === 'error'
+            ? 'bg-red-950/90 border-red-500/50 text-red-200'
+            : 'bg-emerald-950/90 border-emerald-500/50 text-emerald-200'
+        }`;
+        toast.innerHTML = `
+          <span>${message}</span>
+        `;
+        container.appendChild(toast);
+
+        setTimeout(() => {
+          toast.classList.add('opacity-0', 'translate-y-2');
+          setTimeout(() => toast.remove(), 300);
+        }, 3500);
+      };
+    </script>
+  </body>
+</html>

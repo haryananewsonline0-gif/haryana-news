@@ -1,0 +1,195 @@
+---
+// ==============================================================================
+// Admin Generation Logs & System Diagnostics
+// Route: /admin/logs
+// ==============================================================================
+
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import { getServiceSupabase } from '@/lib/supabase/server';
+import type { GenerationLog, LogStatus } from '@/types/database';
+
+export const prerender = false;
+
+const runtimeEnv = Astro.locals?.runtime?.env;
+const supabase = getServiceSupabase(runtimeEnv);
+
+const url = new URL(Astro.request.url);
+const statusFilter = url.searchParams.get('status') || 'all';
+
+let query = supabase
+  .from('generation_logs')
+  .select('*')
+  .order('created_at', { ascending: false })
+  .limit(100);
+
+if (statusFilter !== 'all') {
+  query = query.eq('status', statusFilter as LogStatus);
+}
+
+const { data: logsData } = await query;
+const logs = (logsData as GenerationLog[]) || [];
+---
+
+<AdminLayout title="सिस्टम लॉग्स व डायग्नोस्टिक्स" activeNav="logs">
+  <div class="space-y-6 max-w-7xl mx-auto">
+    <!-- Filter Strip -->
+    <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 p-4 rounded-2xl bg-slate-900 border border-slate-800">
+      <div class="flex items-center gap-1.5 p-1 bg-slate-950 rounded-xl border border-slate-800/80 text-xs">
+        <a
+          href="/admin/logs?status=all"
+          class={`px-3 py-1.5 rounded-lg font-medium transition-all ${
+            statusFilter === 'all'
+              ? 'bg-brand-saffron text-white shadow-sm'
+              : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          सभी (All)
+        </a>
+        <a
+          href="/admin/logs?status=success"
+          class={`px-3 py-1.5 rounded-lg font-medium transition-all ${
+            statusFilter === 'success'
+              ? 'bg-emerald-600 text-white shadow-sm'
+              : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          सफल (Success)
+        </a>
+        <a
+          href="/admin/logs?status=failure"
+          class={`px-3 py-1.5 rounded-lg font-medium transition-all ${
+            statusFilter === 'failure'
+              ? 'bg-red-600 text-white shadow-sm'
+              : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          विफल (Failure)
+        </a>
+        <a
+          href="/admin/logs?status=draft_safety"
+          class={`px-3 py-1.5 rounded-lg font-medium transition-all ${
+            statusFilter === 'draft_safety'
+              ? 'bg-amber-600 text-white shadow-sm'
+              : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          सुरक्षा ड्राफ्ट (Safety Quarantined)
+        </a>
+        <a
+          href="/admin/logs?status=skipped"
+          class={`px-3 py-1.5 rounded-lg font-medium transition-all ${
+            statusFilter === 'skipped'
+              ? 'bg-slate-700 text-white shadow-sm'
+              : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          छोड़े गए (Skipped)
+        </a>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          onclick="window.location.reload()"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold border border-slate-700 transition-all cursor-pointer"
+        >
+          <svg class="w-3.5 h-3.5 text-brand-saffron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          <span>ताज़ा करें</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Logs Table Card -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-slate-300">
+          <thead class="text-xs uppercase bg-slate-950/60 text-slate-400 border-b border-slate-800 font-outfit">
+            <tr>
+              <th scope="col" class="px-5 py-3.5 font-semibold">समय (IST)</th>
+              <th scope="col" class="px-5 py-3.5 font-semibold">स्लॉट कुंजी</th>
+              <th scope="col" class="px-5 py-3.5 font-semibold">स्थिति</th>
+              <th scope="col" class="px-5 py-3.5 font-semibold">अवधि (Duration)</th>
+              <th scope="col" class="px-5 py-3.5 font-semibold">त्रुटि / विवरण</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/60">
+            {logs.length === 0 ? (
+              <tr>
+                <td colspan="5" class="px-5 py-12 text-center text-slate-500 text-sm">
+                  कोई लॉग प्रविष्टि नहीं मिली।
+                </td>
+              </tr>
+            ) : (
+              logs.map((log) => {
+                const isSuccess = log.status === 'success';
+                const isFailure = log.status === 'failure';
+                const isSafety = log.status === 'draft_safety';
+                return (
+                  <tr class="hover:bg-slate-800/40 transition-colors">
+                    <!-- IST Timestamp -->
+                    <td class="px-5 py-3.5 whitespace-nowrap font-mono text-xs text-slate-400">
+                      {new Date(log.created_at).toLocaleString('en-GB', {
+                        timeZone: 'Asia/Kolkata',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        day: '2-digit',
+                        month: 'short',
+                      })}
+                    </td>
+
+                    <!-- Slot Key -->
+                    <td class="px-5 py-3.5 whitespace-nowrap">
+                      <div class="font-bold text-white text-xs font-mono">{log.slot}</div>
+                    </td>
+
+                    <!-- Status -->
+                    <td class="px-5 py-3.5 whitespace-nowrap">
+                      <span
+                        class={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                          isSuccess
+                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                            : isFailure
+                            ? 'bg-red-500/10 text-red-400 border border-red-500/20'
+                            : isSafety
+                            ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                            : 'bg-slate-800 text-slate-400 border border-slate-700'
+                        }`}
+                      >
+                        <span class={`w-1.5 h-1.5 rounded-full ${isSuccess ? 'bg-emerald-400' : isFailure ? 'bg-red-400' : isSafety ? 'bg-amber-400' : 'bg-slate-400'}`}></span>
+                        {log.status.toUpperCase()}
+                      </span>
+                    </td>
+
+                    <!-- Duration -->
+                    <td class="px-5 py-3.5 whitespace-nowrap font-mono text-xs text-slate-400">
+                      {log.duration_ms ? `${(log.duration_ms / 1000).toFixed(2)}s` : '—'}
+                    </td>
+
+                    <!-- Error / Details -->
+                    <td class="px-5 py-3.5 text-xs">
+                      {log.error ? (
+                        <details class="text-red-400 cursor-pointer">
+                          <summary class="hover:underline font-mono text-[11px] truncate max-w-sm">
+                            {log.error.slice(0, 60)}...
+                          </summary>
+                          <div class="mt-2 p-2.5 bg-slate-950 rounded-lg text-[11px] font-mono text-red-300 border border-red-500/20 max-w-lg whitespace-pre-wrap">
+                            {log.error}
+                          </div>
+                        </details>
+                      ) : (
+                        <span class="text-emerald-400 text-xs font-mono">OK</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</AdminLayout>

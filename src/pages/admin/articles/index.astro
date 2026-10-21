@@ -1,0 +1,316 @@
+---
+// ==============================================================================
+// Admin Articles List & Management
+// Route: /admin/articles
+// ==============================================================================
+
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import { getServiceSupabase } from '@/lib/supabase/server';
+import type { Article } from '@/types/database';
+
+export const prerender = false;
+
+const runtimeEnv = Astro.locals?.runtime?.env;
+const supabase = getServiceSupabase(runtimeEnv);
+
+const url = new URL(Astro.request.url);
+const statusFilter = url.searchParams.get('status') || 'all';
+const searchQuery = url.searchParams.get('q') || '';
+const page = parseInt(url.searchParams.get('page') || '1', 10);
+const pageSize = 20;
+const from = (page - 1) * pageSize;
+const to = from + pageSize - 1;
+
+let query = supabase
+  .from('articles')
+  .select('*', { count: 'exact' })
+  .order('created_at', { ascending: false })
+  .range(from, to);
+
+if (statusFilter !== 'all') {
+  query = query.eq('status', statusFilter);
+}
+
+if (searchQuery) {
+  query = query.or(`title.ilike.%${searchQuery}%,district.ilike.%${searchQuery}%,category.ilike.%${searchQuery}%`);
+}
+
+const { data: articlesData, count: totalCount } = await query;
+const articles = (articlesData as Article[]) || [];
+const totalPages = Math.ceil((totalCount || 0) / pageSize);
+---
+
+<AdminLayout title="सभी समाचार प्रबंधन" activeNav="articles">
+  <div class="space-y-6 max-w-7xl mx-auto">
+    <!-- Top Filter Bar -->
+    <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 p-4 rounded-2xl bg-slate-900 border border-slate-800">
+      <!-- Status Tabs -->
+      <div class="flex items-center gap-1.5 p-1 bg-slate-950 rounded-xl border border-slate-800/80 text-xs overflow-x-auto">
+        <a
+          href={`/admin/articles?status=all${searchQuery ? `&q=${searchQuery}` : ''}`}
+          class={`px-3 py-1.5 rounded-lg font-medium transition-all ${
+            statusFilter === 'all'
+              ? 'bg-brand-saffron text-white shadow-sm'
+              : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          सभी
+        </a>
+        <a
+          href={`/admin/articles?status=published${searchQuery ? `&q=${searchQuery}` : ''}`}
+          class={`px-3 py-1.5 rounded-lg font-medium transition-all ${
+            statusFilter === 'published'
+              ? 'bg-emerald-600 text-white shadow-sm'
+              : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          प्रकाशित (Live)
+        </a>
+        <a
+          href={`/admin/articles?status=draft${searchQuery ? `&q=${searchQuery}` : ''}`}
+          class={`px-3 py-1.5 rounded-lg font-medium transition-all ${
+            statusFilter === 'draft'
+              ? 'bg-amber-600 text-white shadow-sm'
+              : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          समीक्षाधीन ड्राफ्ट
+        </a>
+        <a
+          href={`/admin/articles?status=unpublished${searchQuery ? `&q=${searchQuery}` : ''}`}
+          class={`px-3 py-1.5 rounded-lg font-medium transition-all ${
+            statusFilter === 'unpublished'
+              ? 'bg-slate-700 text-white shadow-sm'
+              : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          अप्रकाशित
+        </a>
+      </div>
+
+      <!-- Search and Add -->
+      <div class="flex items-center gap-3">
+        <form method="get" class="relative">
+          <input type="hidden" name="status" value={statusFilter} />
+          <input
+            type="text"
+            name="q"
+            value={searchQuery}
+            placeholder="शीर्षक या ज़िला खोजें..."
+            class="w-48 sm:w-64 px-3.5 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-saffron"
+          />
+          <button type="submit" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </button>
+        </form>
+
+        <a
+          href="/admin/articles/new"
+          class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-brand-green hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm transition-all shrink-0 cursor-pointer"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          <span>नया लेख</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Articles Table Card -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-slate-300">
+          <thead class="text-xs uppercase bg-slate-950/60 text-slate-400 border-b border-slate-800">
+            <tr>
+              <th scope="col" class="px-5 py-3.5 font-semibold">तस्वीर</th>
+              <th scope="col" class="px-5 py-3.5 font-semibold">शीर्षक व श्रेणी</th>
+              <th scope="col" class="px-5 py-3.5 font-semibold">ज़िला</th>
+              <th scope="col" class="px-5 py-3.5 font-semibold">स्थिति</th>
+              <th scope="col" class="px-5 py-3.5 font-semibold font-outfit">Views</th>
+              <th scope="col" class="px-5 py-3.5 font-semibold">तारीख</th>
+              <th scope="col" class="px-5 py-3.5 font-semibold text-right">कार्य</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/60">
+            {articles.length === 0 ? (
+              <tr>
+                <td colspan="7" class="px-5 py-12 text-center text-slate-500 text-sm">
+                  कोई लेख नहीं मिला।
+                </td>
+              </tr>
+            ) : (
+              articles.map((article) => {
+                const isPub = article.status === 'published';
+                const isDraft = article.status === 'draft';
+                return (
+                  <tr class="hover:bg-slate-800/40 transition-colors" data-article-id={article.id}>
+                    <!-- Thumbnail -->
+                    <td class="px-5 py-3.5 whitespace-nowrap">
+                      <div class="w-14 h-10 rounded-lg bg-slate-800 overflow-hidden border border-slate-700/60">
+                        {article.thumbnail_url ? (
+                          <img
+                            src={article.thumbnail_url}
+                            alt=""
+                            class="w-full h-full object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div class="w-full h-full flex items-center justify-center text-[10px] text-slate-500 font-bold">
+                            NO IMG
+                          </div>
+                        )}
+                      </div>
+                    </td>
+
+                    <!-- Title & Category -->
+                    <td class="px-5 py-3.5">
+                      <div class="font-medium text-white line-clamp-1 max-w-md">
+                        {article.title}
+                      </div>
+                      <div class="flex items-center gap-2 mt-1">
+                        <span class="text-[11px] px-2 py-0.5 rounded bg-slate-800 text-brand-saffron border border-slate-700">
+                          {article.category}
+                        </span>
+                      </div>
+                    </td>
+
+                    <!-- District -->
+                    <td class="px-5 py-3.5 whitespace-nowrap text-xs text-slate-400">
+                      {article.district || 'हरियाणा'}
+                    </td>
+
+                    <!-- Status -->
+                    <td class="px-5 py-3.5 whitespace-nowrap">
+                      <span
+                        class={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                          isPub
+                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                            : isDraft
+                            ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                            : 'bg-slate-800 text-slate-400'
+                        }`}
+                      >
+                        <span class={`w-1.5 h-1.5 rounded-full ${isPub ? 'bg-emerald-400' : isDraft ? 'bg-amber-400' : 'bg-slate-400'}`}></span>
+                        {isPub ? 'प्रकाशित' : isDraft ? 'ड्राफ्ट' : 'अप्रकाशित'}
+                      </span>
+                    </td>
+
+                    <!-- Views -->
+                    <td class="px-5 py-3.5 whitespace-nowrap font-mono text-xs text-slate-400">
+                      {article.views || 0}
+                    </td>
+
+                    <!-- Date -->
+                    <td class="px-5 py-3.5 whitespace-nowrap text-xs text-slate-400">
+                      {new Date(article.published_at || article.created_at).toLocaleDateString('hi-IN', {
+                        day: 'numeric',
+                        month: 'short',
+                        timeZone: 'Asia/Kolkata',
+                      })}
+                    </td>
+
+                    <!-- Actions -->
+                    <td class="px-5 py-3.5 whitespace-nowrap text-right">
+                      <div class="inline-flex items-center gap-2">
+                        {isPub && (
+                          <a
+                            href={`/news/${article.slug}`}
+                            target="_blank"
+                            title="वेबसाइट पर देखें"
+                            class="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+                          >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                          </a>
+                        )}
+
+                        <a
+                          href={`/admin/articles/edit/${article.id}`}
+                          title="संपादित करें"
+                          class="p-1.5 text-slate-400 hover:text-brand-saffron hover:bg-slate-800 rounded-lg transition-colors"
+                        >
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </a>
+
+                        <button
+                          type="button"
+                          class="delete-btn p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors cursor-pointer"
+                          data-id={article.id}
+                          title="हटाएं"
+                        >
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination Footer -->
+      {totalPages > 1 && (
+        <div class="px-5 py-4 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+          <div>
+            कुल {totalCount} में से {from + 1}–{Math.min(to + 1, totalCount || 0)} लेख
+          </div>
+          <div class="flex items-center gap-2">
+            {page > 1 && (
+              <a
+                href={`/admin/articles?page=${page - 1}&status=${statusFilter}${searchQuery ? `&q=${searchQuery}` : ''}`}
+                class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-medium"
+              >
+                « पिछला
+              </a>
+            )}
+            <span class="px-2">पृष्ठ {page} / {totalPages}</span>
+            {page < totalPages && (
+              <a
+                href={`/admin/articles?page=${page + 1}&status=${statusFilter}${searchQuery ? `&q=${searchQuery}` : ''}`}
+                class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-medium"
+              >
+                अगला »
+              </a>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+
+  <script is:inline>
+    const deleteButtons = document.querySelectorAll('.delete-btn');
+    deleteButtons.forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-id');
+        if (!confirm('क्या आप वाकई इस समाचार को हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती।')) {
+          return;
+        }
+
+        try {
+          const res = await fetch(`/api/admin/articles/${id}`, { method: 'DELETE' });
+          const data = await res.json();
+
+          if (!res.ok || !data.success) {
+            throw new Error(data.error || 'हटाने में त्रुटि');
+          }
+
+          window.showAdminToast('लेख सफलतापूर्वक हटा दिया गया।');
+          const row = document.querySelector(`tr[data-article-id="${id}"]`);
+          row?.remove();
+        } catch (err) {
+          window.showAdminToast(err.message, 'error');
+        }
+      });
+    });
+  </script>
+</AdminLayout>

@@ -1,0 +1,203 @@
+---
+// ==============================================================================
+// Admin 2FA Setup & QR Code Enrollment
+// Route: /admin/mfa-setup
+// ==============================================================================
+
+import { verifyAdminSession } from '@/lib/auth/session';
+
+export const prerender = false;
+
+const runtimeEnv = Astro.locals?.runtime?.env;
+const session = await verifyAdminSession(Astro.cookies, runtimeEnv);
+
+if (!session.isAuthenticated || !session.isAdmin) {
+  return Astro.redirect('/admin/login');
+}
+---
+
+<!doctype html>
+<html lang="hi" class="h-full bg-slate-900">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <title>2FA सेटअप करें | हरियाणा न्यूज़ एडमिन</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="h-full font-devanagari text-slate-100 flex items-center justify-center p-4 selection:bg-brand-saffron selection:text-white">
+    <div class="w-full max-w-lg">
+      <div class="text-center mb-6">
+        <h1 class="text-2xl font-bold tracking-tight text-white">Google Authenticator सेटअप</h1>
+        <p class="text-sm text-slate-400 mt-1">
+          अपने फ़ोन पर Google Authenticator या Authy खोलें और QR कोड स्कैन करें
+        </p>
+      </div>
+
+      <div class="bg-slate-800/80 backdrop-blur-xl border border-slate-700/60 rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
+        <!-- Loading State -->
+        <div id="loading-box" class="py-12 text-center">
+          <svg class="animate-spin h-8 w-8 text-brand-saffron mx-auto mb-3" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+          </svg>
+          <p class="text-sm text-slate-400">सुरक्षित 2FA कुंजी जनरेट की जा रही है...</p>
+        </div>
+
+        <!-- Setup Content -->
+        <div id="setup-box" class="hidden space-y-6">
+          <!-- Alert Box -->
+          <div id="error-alert" class="hidden p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-start gap-2">
+            <svg class="w-5 h-5 shrink-0 text-red-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <span id="error-text">त्रुटि</span>
+          </div>
+
+          <!-- QR Code Display -->
+          <div class="flex flex-col items-center justify-center p-4 bg-white rounded-xl shadow-inner">
+            <img id="qr-img" class="w-48 h-48 rounded-lg" alt="2FA QR Code" />
+          </div>
+
+          <!-- Secret Key Display with Copy Button -->
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">
+              या यह सीक्रेट कुंजी मैन्युअल दर्ज करें:
+            </label>
+            <div class="flex items-center gap-2">
+              <input
+                type="text"
+                id="secret-key"
+                readonly
+                class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-amber-400 font-mono text-xs font-semibold focus:outline-none"
+              />
+              <button
+                type="button"
+                id="copy-btn"
+                class="px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs font-semibold text-white shrink-0 cursor-pointer transition-colors"
+              >
+                कॉपी
+              </button>
+            </div>
+          </div>
+
+          <!-- Verification Test Form -->
+          <form id="confirm-form" class="space-y-4 pt-2 border-t border-slate-700/60">
+            <div>
+              <label for="test-code" class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">
+                ऐप में दिख रहा 6-अंकीय कोड दर्ज करके सक्रिय करें:
+              </label>
+              <input
+                type="text"
+                id="test-code"
+                required
+                maxlength="6"
+                pattern="[0-9]{6}"
+                inputmode="numeric"
+                placeholder="123456"
+                class="w-full text-center text-2xl font-mono tracking-widest px-4 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700 text-white focus:outline-none focus:border-brand-saffron"
+              />
+            </div>
+
+            <button
+              type="submit"
+              id="confirm-btn"
+              class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-brand-saffron to-amber-600 hover:from-amber-500 hover:to-brand-saffron text-white font-semibold text-sm shadow-lg shadow-brand-saffron/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              सक्रिय करें और डैशबोर्ड पर जाएं
+            </button>
+          </form>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-slate-700/60 flex justify-between text-xs text-slate-400">
+          <a href="/admin/mfa" class="hover:text-brand-saffron">« वापस कोड दर्ज करने जाएं</a>
+          <a href="/api/admin/auth/logout" class="hover:text-red-400">लॉगआउट</a>
+        </div>
+      </div>
+    </div>
+
+    <script is:inline>
+      let currentFactorId = '';
+      const loadingBox = document.getElementById('loading-box');
+      const setupBox = document.getElementById('setup-box');
+      const qrImg = document.getElementById('qr-img');
+      const secretInput = document.getElementById('secret-key');
+      const copyBtn = document.getElementById('copy-btn');
+      const confirmForm = document.getElementById('confirm-form');
+      const testCodeInput = document.getElementById('test-code');
+      const errorAlert = document.getElementById('error-alert');
+      const errorText = document.getElementById('error-text');
+
+      async function initSetup() {
+        try {
+          const res = await fetch('/api/admin/auth/setup-mfa', { method: 'POST' });
+          const data = await res.json();
+
+          if (!res.ok || !data.success) {
+            throw new Error(data.error || 'सेटअप लोड करने में त्रुटि');
+          }
+
+          if (data.alreadyEnrolled) {
+            // Already enrolled, go to verify
+            window.location.href = '/admin/mfa';
+            return;
+          }
+
+          currentFactorId = data.factorId;
+          if (qrImg) qrImg.src = data.qrCode;
+          if (secretInput) secretInput.value = data.secret;
+
+          loadingBox?.classList.add('hidden');
+          setupBox?.classList.remove('hidden');
+        } catch (err) {
+          loadingBox?.classList.add('hidden');
+          if (errorText) errorText.textContent = err.message;
+          errorAlert?.classList.remove('hidden');
+          setupBox?.classList.remove('hidden');
+        }
+      }
+
+      copyBtn?.addEventListener('click', () => {
+        if (secretInput?.value) {
+          navigator.clipboard.writeText(secretInput.value);
+          copyBtn.textContent = 'कॉपी हो गया!';
+          setTimeout(() => (copyBtn.textContent = 'कॉपी'), 2000);
+        }
+      });
+
+      confirmForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        errorAlert?.classList.add('hidden');
+
+        const code = testCodeInput?.value.trim();
+        try {
+          const res = await fetch('/api/admin/auth/verify-mfa', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              code,
+              factorId: currentFactorId,
+            }),
+          });
+
+          const data = await res.json();
+          if (!res.ok || !data.success) {
+            throw new Error(data.error || 'कोड सत्यापन विफल रहा');
+          }
+
+          window.location.href = data.redirect || '/admin';
+        } catch (err) {
+          if (errorText) errorText.textContent = err.message;
+          errorAlert?.classList.remove('hidden');
+        }
+      });
+
+      initSetup();
+    </script>
+  </body>
+</html>

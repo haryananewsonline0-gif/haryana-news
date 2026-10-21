@@ -1,0 +1,400 @@
+---
+// ==============================================================================
+// Admin Dashboard & Slot Automation Controls
+// Route: /admin
+// ==============================================================================
+
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import { getServiceSupabase } from '@/lib/supabase/server';
+import type { Slot, Settings } from '@/types/database';
+
+export const prerender = false;
+
+const runtimeEnv = Astro.locals?.runtime?.env;
+const supabase = getServiceSupabase(runtimeEnv);
+
+// Fetch settings
+const { data: settingsData } = await supabase
+  .from('settings')
+  .select('*')
+  .eq('id', 1)
+  .maybeSingle();
+
+const settings = (settingsData as Settings | null) || {
+  id: 1,
+  kill_switch: false,
+  whatsapp_enabled: true,
+  updated_at: new Date().toISOString(),
+};
+
+const isKillSwitchActive = settings.kill_switch;
+const isWhatsAppActive = settings.whatsapp_enabled;
+
+// Get today's start in IST
+const now = new Date();
+const todayISTStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(now);
+const todayStartUTC = new Date(`${todayISTStr}T00:00:00+05:30`).toISOString();
+
+// Fetch stats in parallel
+const [
+  { count: todayArticlesCount },
+  { count: draftArticlesCount },
+  { count: totalArticlesCount },
+  { count: failedLogsCount },
+  { data: slotsData },
+] = await Promise.all([
+  supabase
+    .from('articles')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'published')
+    .gte('published_at', todayStartUTC),
+  supabase
+    .from('articles')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'draft'),
+  supabase
+    .from('articles')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'published'),
+  supabase
+    .from('generation_logs')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'failure')
+    .gte('created_at', todayStartUTC),
+  supabase
+    .from('slots')
+    .select('*')
+    .order('schedule_ist', { ascending: true }),
+]);
+
+const slots = (slotsData as Slot[]) || [];
+---
+
+<AdminLayout title="डैशबोर्ड व स्लॉट नियंत्रण" activeNav="dashboard">
+  <div class="space-y-8 max-w-7xl mx-auto">
+    <!-- System Master Controls Strip -->
+    <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl relative overflow-hidden">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div>
+          <h3 class="text-base font-bold text-white flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-brand-saffron"></span>
+            सिस्टम संचालन नियंत्रण (Master Switches)
+          </h3>
+          <p class="text-xs text-slate-400 mt-1">
+            वेबसाइट की ऑटोमेशन पाइपलाइन और व्हाट्सएप प्रसारण को यहाँ से तुरंत रोकें या शुरू करें।
+          </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-4">
+          <!-- Kill Switch Toggle -->
+          <div class="flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-950 border border-slate-800">
+            <div>
+              <div class="text-xs font-bold text-white flex items-center gap-1.5">
+                <span class={`w-2.5 h-2.5 rounded-full ${isKillSwitchActive ? 'bg-red-500 animate-ping' : 'bg-emerald-500'}`}></span>
+                किल स्विच (Kill Switch)
+              </div>
+              <div class="text-[11px] text-slate-400">
+                {isKillSwitchActive ? 'ऑटो-पब्लिशिंग पूरी तरह बंद है' : 'ऑटोमेशन सुचारू रूप से चालू'}
+              </div>
+            </div>
+            <button
+              id="kill-switch-btn"
+              data-active={isKillSwitchActive ? 'true' : 'false'}
+              class={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                isKillSwitchActive
+                  ? 'bg-red-500/20 text-red-400 border border-red-500/40 hover:bg-red-500 hover:text-white'
+                  : 'bg-slate-800 text-slate-300 border border-slate-700 hover:border-red-500 hover:text-red-400'
+              }`}
+            >
+              {isKillSwitchActive ? 'सक्रिय (STOPPED)' : 'निष्क्रिय (SAFE)'}
+            </button>
+          </div>
+
+          <!-- WhatsApp Broadcast Toggle -->
+          <div class="flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-950 border border-slate-800">
+            <div>
+              <div class="text-xs font-bold text-white flex items-center gap-1.5">
+                <span class={`w-2.5 h-2.5 rounded-full ${isWhatsAppActive ? 'bg-emerald-500' : 'bg-slate-500'}`}></span>
+                व्हाट्सएप ब्रॉडकास्ट
+              </div>
+              <div class="text-[11px] text-slate-400">
+                {isWhatsAppActive ? 'नए लेख चैनल पर भेजे जा रहे हैं' : 'व्हाट्सएप शेयरिंग म्यूट है'}
+              </div>
+            </div>
+            <button
+              id="whatsapp-toggle-btn"
+              data-active={isWhatsAppActive ? 'true' : 'false'}
+              class={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                isWhatsAppActive
+                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500 hover:text-white'
+                  : 'bg-slate-800 text-slate-400 border border-slate-700 hover:text-white'
+              }`}
+            >
+              {isWhatsAppActive ? 'चालू (ON)' : 'बंद (OFF)'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Stats Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <!-- Stat 1: Today Published -->
+      <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-md">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold text-slate-400">आज प्रकाशित समाचार</span>
+          <span class="p-2 rounded-xl bg-emerald-500/10 text-emerald-400">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </span>
+        </div>
+        <div class="mt-3 flex items-baseline gap-2">
+          <span class="text-3xl font-extrabold text-white font-outfit">{todayArticlesCount || 0}</span>
+          <span class="text-xs text-slate-400">लेख</span>
+        </div>
+      </div>
+
+      <!-- Stat 2: Drafts Pending Review -->
+      <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-md">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold text-slate-400">समीक्षाधीन ड्राफ्ट्स</span>
+          <span class="p-2 rounded-xl bg-amber-500/10 text-brand-saffron">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </span>
+        </div>
+        <div class="mt-3 flex items-baseline justify-between">
+          <span class="text-3xl font-extrabold text-brand-saffron font-outfit">{draftArticlesCount || 0}</span>
+          {Number(draftArticlesCount) > 0 && (
+            <a href="/admin/articles?status=draft" class="text-xs text-brand-saffron hover:underline font-medium">
+              समीक्षा करें »
+            </a>
+          )}
+        </div>
+      </div>
+
+      <!-- Stat 3: Failed Slots Today -->
+      <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-md">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold text-slate-400">आज स्लॉट विफलताएं</span>
+          <span class="p-2 rounded-xl bg-red-500/10 text-red-400">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </span>
+        </div>
+        <div class="mt-3 flex items-baseline justify-between">
+          <span class={`text-3xl font-extrabold font-outfit ${Number(failedLogsCount) > 0 ? 'text-red-400' : 'text-slate-400'}`}>
+            {failedLogsCount || 0}
+          </span>
+          {Number(failedLogsCount) > 0 && (
+            <a href="/admin/logs?status=failed" class="text-xs text-red-400 hover:underline font-medium">
+              लॉग देखें »
+            </a>
+          )}
+        </div>
+      </div>
+
+      <!-- Stat 4: Total Published All Time -->
+      <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-md">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold text-slate-400">कुल प्रकाशित समाचार</span>
+          <span class="p-2 rounded-xl bg-sky-500/10 text-sky-400">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+            </svg>
+          </span>
+        </div>
+        <div class="mt-3 flex items-baseline gap-2">
+          <span class="text-3xl font-extrabold text-white font-outfit">{totalArticlesCount || 0}</span>
+          <span class="text-xs text-slate-400">आर्काइव</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 15-Slot Publishing Timetable -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      <div class="p-5 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h3 class="text-base font-bold text-white flex items-center gap-2">
+            <svg class="w-5 h-5 text-brand-saffron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            दैनिक 15-स्लॉट ऑटोमेशन समय-सारिणी (IST Timetable)
+          </h3>
+          <p class="text-xs text-slate-400 mt-1">
+            प्रत्येक स्लॉट अपने निर्धारित समय पर cron-job.org द्वारा ट्रिगर होता है। आप किसी भी स्लॉट को तुरंत टेस्ट या रीजनरेट कर सकते हैं।
+          </p>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-slate-300">
+          <thead class="text-xs uppercase bg-slate-950/60 text-slate-400 border-b border-slate-800">
+            <tr>
+              <th scope="col" class="px-5 py-3 font-semibold font-outfit">समय (IST)</th>
+              <th scope="col" class="px-5 py-3 font-semibold">स्लॉट कुंजी व नाम</th>
+              <th scope="col" class="px-5 py-3 font-semibold">विवरण</th>
+              <th scope="col" class="px-5 py-3 font-semibold">स्थिति</th>
+              <th scope="col" class="px-5 py-3 font-semibold text-right">त्वरित एक्शन</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/60 font-normal">
+            {slots.map((slot) => {
+              return (
+                <tr class="hover:bg-slate-800/40 transition-colors">
+                  <!-- Scheduled Time -->
+                  <td class="px-5 py-4 whitespace-nowrap font-mono text-sm font-bold text-amber-400">
+                    {slot.schedule_ist} IST
+                  </td>
+
+                  <!-- Slot Key & Name -->
+                  <td class="px-5 py-4 whitespace-nowrap">
+                    <div class="font-medium text-white">{slot.name}</div>
+                    <div class="text-xs text-slate-400 font-mono">{slot.slot_key}</div>
+                  </td>
+
+                  <!-- Description -->
+                  <td class="px-5 py-4">
+                    <div class="text-xs text-slate-300 line-clamp-1 max-w-md">
+                      {slot.description || '—'}
+                    </div>
+                  </td>
+
+                  <!-- Active Status -->
+                  <td class="px-5 py-4 whitespace-nowrap">
+                    <span
+                      class={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
+                        slot.is_active
+                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                          : 'bg-slate-800 text-slate-500'
+                      }`}
+                    >
+                      <span class={`w-1.5 h-1.5 rounded-full ${slot.is_active ? 'bg-emerald-400' : 'bg-slate-500'}`}></span>
+                      {slot.is_active ? 'सक्रिय' : 'रोका गया'}
+                    </span>
+                  </td>
+
+                  <!-- Trigger Action -->
+                  <td class="px-5 py-4 whitespace-nowrap text-right">
+                    <button
+                      type="button"
+                      data-slot-id={slot.slot_key}
+                      class="trigger-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-brand-saffron hover:text-white text-slate-300 text-xs font-semibold border border-slate-700/80 transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      <span class="btn-text">तुरंत चलाएं</span>
+                      <svg class="btn-spinner hidden animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                      </svg>
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script is:inline>
+    // Kill Switch Toggle
+    const killBtn = document.getElementById('kill-switch-btn');
+    killBtn?.addEventListener('click', async () => {
+      const isCurrentlyActive = killBtn.getAttribute('data-active') === 'true';
+      const newState = !isCurrentlyActive;
+
+      const confirmMsg = newState
+        ? '⚠️ क्या आप वाकई किल स्विच सक्रिय करना चाहते हैं? इससे सभी स्वचालित स्लॉट्स तुरंत रुक जाएंगे!'
+        : 'क्या आप किल स्विच हटाकर सामान्य ऑटो-पब्लिशिंग पुनः आरंभ करना चाहते हैं?';
+
+      if (!confirm(confirmMsg)) return;
+
+      try {
+        const res = await fetch('/api/admin/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ kill_switch: newState }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.error || 'अद्यतन विफल');
+
+        window.showAdminToast(
+          newState ? '🔴 किल स्विच सक्रिय किया गया (ऑटोमेशन बंद)' : '🟢 किल स्विच निष्क्रिय (ऑटोमेशन चालू)',
+          newState ? 'error' : 'success'
+        );
+
+        setTimeout(() => window.location.reload(), 1000);
+      } catch (err) {
+        window.showAdminToast(err.message, 'error');
+      }
+    });
+
+    // WhatsApp Broadcast Toggle
+    const waBtn = document.getElementById('whatsapp-toggle-btn');
+    waBtn?.addEventListener('click', async () => {
+      const isCurrentlyActive = waBtn.getAttribute('data-active') === 'true';
+      const newState = !isCurrentlyActive;
+
+      try {
+        const res = await fetch('/api/admin/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ whatsapp_enabled: newState }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.error || 'अद्यतन विफल');
+
+        window.showAdminToast(
+          newState ? '🟢 व्हाट्सएप ब्रॉडकास्ट सक्रिय' : '⚪ व्हाट्सएप ब्रॉडकास्ट म्यूट',
+          'success'
+        );
+
+        setTimeout(() => window.location.reload(), 1000);
+      } catch (err) {
+        window.showAdminToast(err.message, 'error');
+      }
+    });
+
+    // Slot Trigger Buttons
+    const triggerButtons = document.querySelectorAll('.trigger-btn');
+    triggerButtons.forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const slotId = btn.getAttribute('data-slot-id');
+        const textEl = btn.querySelector('.btn-text');
+        const spinEl = btn.querySelector('.btn-spinner');
+
+        btn.disabled = true;
+        textEl.textContent = 'जनरेट हो रहा...';
+        spinEl.classList.remove('hidden');
+
+        try {
+          const res = await fetch('/api/admin/trigger-slot', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ slot_id: slotId }),
+          });
+          const data = await res.json();
+
+          if (!res.ok || !data.success) {
+            throw new Error(data.error || 'स्लॉट निष्पादन विफल');
+          }
+
+          window.showAdminToast(`✅ स्लॉट [${slotId}] सफलतापूर्वक निष्पादित हुआ!`);
+        } catch (err) {
+          window.showAdminToast(`❌ त्रुटि: ${err.message}`, 'error');
+        } finally {
+          btn.disabled = false;
+          textEl.textContent = 'तुरंत चलाएं';
+          spinEl.classList.add('hidden');
+        }
+      });
+    });
+  </script>
+</AdminLayout>
