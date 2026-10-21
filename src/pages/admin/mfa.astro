@@ -50,6 +50,10 @@ if (accessToken) {
   } catch (e) {
     // Continue to standard MFA prompt if check fails
   }
+
+  if (!isEnrolled && !isDev) {
+    return Astro.redirect('/admin/mfa-setup');
+  }
 }
 ---
 

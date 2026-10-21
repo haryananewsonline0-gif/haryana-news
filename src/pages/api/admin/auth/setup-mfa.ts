@@ -10,7 +10,7 @@ import type { Database } from '@/types/database';
 
 export const prerender = false;
 
-export const POST: APIRoute = async ({ cookies, locals }) => {
+export const POST: APIRoute = async ({ request, cookies, locals }) => {
   const runtimeEnv = locals?.runtime?.env;
   const accessToken = cookies.get('sb-access-token')?.value;
 
@@ -36,6 +36,16 @@ export const POST: APIRoute = async ({ cookies, locals }) => {
     '';
 
   try {
+    const url = new URL(request.url);
+    let isReset = url.searchParams.get('reset') === 'true';
+
+    try {
+      const body = await request.json();
+      if (body?.reset) isReset = true;
+    } catch {
+      // Body parsing optional
+    }
+
     const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
       global: {
         headers: {
@@ -57,30 +67,57 @@ export const POST: APIRoute = async ({ cookies, locals }) => {
       });
     }
 
-    // Check existing factors
+    // List all existing factors
     const { data: factors, error: factorsError } = await supabase.auth.mfa.listFactors();
     if (factorsError) {
-      console.error('MFA list factors error:', factorsError);
+      console.warn('MFA list factors warning:', factorsError);
     }
 
-    const verifiedFactor = factors?.totp?.find((f) => f.status === 'verified');
-    if (verifiedFactor) {
-      return new Response(
-        JSON.stringify({
-          success: true,
-          alreadyEnrolled: true,
-          factorId: verifiedFactor.id,
-          message: '2FA पहले से कॉन्फ़िगर किया हुआ है।',
-        }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
-      );
+    // If reset requested, unenroll all existing factors
+    if (isReset && factors?.totp) {
+      for (const f of factors.totp) {
+        try {
+          await supabase.auth.mfa.unenroll({ factorId: f.id });
+        } catch (unenrollErr) {
+          console.warn('Failed to unenroll factor on reset:', unenrollErr);
+        }
+      }
+    } else {
+      // Clean up any stale unverified TOTP factors
+      if (factors?.totp) {
+        for (const f of factors.totp) {
+          if ((f.status as string) !== 'verified') {
+            try {
+              await supabase.auth.mfa.unenroll({ factorId: f.id });
+            } catch (unenrollErr) {
+              console.warn('Failed to unenroll unverified factor:', unenrollErr);
+            }
+          }
+        }
+      }
+
+      // Check if already has a verified factor
+      const verifiedFactor = factors?.totp?.find((f) => f.status === 'verified');
+      if (verifiedFactor) {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            alreadyEnrolled: true,
+            factorId: verifiedFactor.id,
+            message: '2FA पहले से कॉन्फ़िगर किया हुआ है।',
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
-    // Enroll a new TOTP factor
+    // Enroll a fresh TOTP factor
+    const username = (userData.user.email?.split('@')[0] || 'admin').replace(/[^a-zA-Z0-9]/g, '');
+    const uniqueSuffix = Date.now().toString().slice(-4);
     const { data: enrollData, error: enrollError } = await supabase.auth.mfa.enroll({
       factorType: 'totp',
       issuer: 'HaryanaNews',
-      friendlyName: `Admin-${userData.user.email?.split('@')[0]}`,
+      friendlyName: `Admin-${username}-${uniqueSuffix}`,
     });
 
     if (enrollError || !enrollData) {

@@ -53,11 +53,20 @@ if (!session.isAuthenticated || !session.isAdmin) {
         <!-- Setup Content -->
         <div id="setup-box" class="hidden space-y-6">
           <!-- Alert Box -->
-          <div id="error-alert" class="hidden p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-start gap-2">
-            <svg class="w-5 h-5 shrink-0 text-red-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            <span id="error-text">त्रुटि</span>
+          <div id="error-alert" class="hidden p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex flex-col gap-2">
+            <div class="flex items-start gap-2">
+              <svg class="w-5 h-5 shrink-0 text-red-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <span id="error-text">त्रुटि</span>
+            </div>
+            <button
+              type="button"
+              id="retry-reset-btn"
+              class="self-start text-xs font-bold text-amber-400 hover:text-amber-300 underline mt-1"
+            >
+              🔄 पुराना 2FA हटाकर नया QR कोड जनरेट करें
+            </button>
           </div>
 
           <!-- QR Code Display -->
@@ -134,9 +143,14 @@ if (!session.isAuthenticated || !session.isAdmin) {
       const errorAlert = document.getElementById('error-alert');
       const errorText = document.getElementById('error-text');
 
-      async function initSetup() {
+      async function initSetup(forceReset = false) {
         try {
-          const res = await fetch('/api/admin/auth/setup-mfa', { method: 'POST' });
+          errorAlert?.classList.add('hidden');
+          loadingBox?.classList.remove('hidden');
+          setupBox?.classList.add('hidden');
+
+          const url = forceReset ? '/api/admin/auth/setup-mfa?reset=true' : '/api/admin/auth/setup-mfa';
+          const res = await fetch(url, { method: 'POST' });
           const data = await res.json();
 
           if (!res.ok || !data.success) {
@@ -162,6 +176,10 @@ if (!session.isAuthenticated || !session.isAdmin) {
           setupBox?.classList.remove('hidden');
         }
       }
+
+      document.getElementById('retry-reset-btn')?.addEventListener('click', () => {
+        initSetup(true);
+      });
 
       copyBtn?.addEventListener('click', () => {
         if (secretInput?.value) {

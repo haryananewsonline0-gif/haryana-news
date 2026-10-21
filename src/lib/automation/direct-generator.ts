@@ -168,8 +168,8 @@ export async function generateArticleLocally(
     const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1200&height=675&nologo=true`;
 
     // Insert article into Supabase
-    const { data: newArticle, error: insertError } = await supabase
-      .from('articles')
+    const { data: newArticle, error: insertError } = await (supabase
+      .from('articles') as any)
       .insert({
         title,
         slug,
@@ -199,30 +199,30 @@ export async function generateArticleLocally(
     const durationMs = Date.now() - startTime;
 
     // Log to generation_logs
-    await supabase.from('generation_logs').insert({
+    await (supabase.from('generation_logs') as any).insert({
       slot: slotKey,
       status: 'success',
       duration_ms: durationMs,
     });
 
     // Update slots table
-    await supabase
-      .from('slots')
+    await (supabase
+      .from('slots') as any)
       .update({ last_run_at: new Date().toISOString() })
       .eq('slot_key', slotKey);
 
     return {
       success: true,
-      articleId: newArticle.id,
-      title: newArticle.title,
-      slug: newArticle.slug,
+      articleId: (newArticle as any)?.id,
+      title: (newArticle as any)?.title,
+      slug: (newArticle as any)?.slug,
     };
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : 'अज्ञात त्रुटि';
     const durationMs = Date.now() - startTime;
 
     try {
-      await supabase.from('generation_logs').insert({
+      await (supabase.from('generation_logs') as any).insert({
         slot: slotKey,
         status: 'failure',
         error: errorMsg,
