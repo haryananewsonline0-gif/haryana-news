@@ -1,0 +1,12 @@
+# ==============================================================================
+# Cloudflare Pages Configuration: Haryana News (haryananews.online)
+# ==============================================================================
+
+name = "haryana-news"
+pages_build_output_dir = "dist"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+PUBLIC_SITE_URL = "https://haryananews.online"
+PUBLIC_SITE_NAME = "हरियाणा न्यूज़"
