@@ -7,7 +7,5 @@ main = "./dist/_worker.js/index.js"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 assets = { directory = "./dist" }
+keep_vars = true
 
-[vars]
-PUBLIC_SITE_URL = "https://haryananews.online"
-PUBLIC_SITE_NAME = "हरियाणा न्यूज़"
