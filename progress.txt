@@ -2,12 +2,13 @@
 [2026-10-21 12:45 IST] Setup completed: GSD + Ralph Loop template installed.
 [2026-10-21 12:45 IST] SPEC.md finalized. ROADMAP.md initialized. PLAN.md created.
 [2026-10-21 12:55 IST] Milestone 1 COMPLETED (Database, RLS, Scaffolding, Design foundation).
-[2026-10-21 13:08 IST] Milestone 2 COMPLETED:
-  - Task 2.1: Homepage Layout with live Breaking News Ticker, market rates strip, hero story, and regional grid.
-  - Task 2.2: Article detail route (/news/[slug]) with IST formatting, "प्रतीकात्मक तस्वीर (AI)" caption, source citations, NewsArticle JSON-LD, and multi-channel share buttons (WhatsApp, Telegram, Facebook, X, Copy link).
-  - Task 2.3: Dynamic Category (/category/[category]) & District (/district/[district]) routing with localized priority for Sirsa, Fatehabad, Hisar, Adampur, Ellenabad, Nohar, Bhadra.
-  - Task 2.4: Search engine route (/search) with server-side query filters and popular search tags.
-  - Task 2.5: AdSense-ready Hindi policy pages (/about, /contact, /privacy-policy, /disclaimer, /terms).
-  - Task 2.6: Complete SEO engine with /robots.txt, dynamic /sitemap.xml, Google News sitemap (/google-news-sitemap.xml for last 48h), and /rss.xml syndication feed.
-  - Verification: `npx astro check` passed with 0 errors/0 warnings (29 files). `npx astro build` completed with code 0.
-[2026-10-21 13:08 IST] Ready for Milestone 3: Auto-Publishing Pipeline, Edge Functions & External API Integrations.
+[2026-10-21 13:08 IST] Milestone 2 COMPLETED (Public Portal, Articles, Categories, Legal pages, SEO & Sitemaps).
+[2026-10-21 13:17 IST] Milestone 3 COMPLETED:
+  - Task 3.1: External Data Fetchers (Open-Meteo weather, data.gov.in mandi, CricAPI cricket, rates fallback for gold/fuel/stocks, Panchang/history for Sirsa coordinates, Hindi RSS).
+  - Task 3.2: Google Gemini AI Narrative Engine enforcing structured JSON {title, summary, body_html, tags, seo_title, seo_description, image_prompt} and model validation for GEMINI_MODEL.
+  - Task 3.3: SHA-256 content hashing & 48h duplicate check + Sensitive topics editorial safety filter (crime, death, communal conflict -> draft flag).
+  - Task 3.4: Thumbnail pipeline with Pollinations.ai (1200x630) -> ImageKit /haryana-news/ and branded gradient card fallback on failure.
+  - Task 3.5: Green API WhatsApp broadcasting to group with 3-8s random delay and urgent draft alert to OWNER_CHAT_ID.
+  - Task 3.6: Main Edge Function Orchestrator (generate-article/index.ts) with x-cron-secret timing-safe comparison, kill switch check, and generation_logs logging.
+  - Verification: `npx astro check` passed with 0 errors/0 warnings (26 files). `npx astro build` completed cleanly with code 0.
+[2026-10-21 13:17 IST] Ready for Milestone 4: Secure Admin Panel, MFA, Turnstile & AI Editorial Chat.

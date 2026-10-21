@@ -54,9 +54,16 @@ updated: "2026-10-21T12:45:00+05:30"
 ---
 
 ### Phase 3: Auto-Publishing Pipeline & Edge Functions
-**Status:** ⬜ Not Started
+**Status:** ✅ Complete
 **Objective:** Build `generate-article` Supabase Edge Function with CRON_SECRET authentication, real-data collectors (Weather, Mandi, Cricket, Fuel, Panchang, News RSS), Gemini generation, Pollinations + ImageKit upload with branded card fallback, duplicate hash check, safety filters, and Green API WhatsApp group broadcasting.
 **Depends on:** Phase 1
+**Tasks:**
+- [x] Task 3.1: External Data Fetchers (Real Numbers First)
+- [x] Task 3.2: Google Gemini AI Narrative Generation Engine
+- [x] Task 3.3: Content Hashing, Duplicate Detection & Sensitive Safety Filter
+- [x] Task 3.4: Thumbnail Engine (Pollinations.ai -> ImageKit & Branded Card Fallback)
+- [x] Task 3.5: Green API WhatsApp Broadcasting & Owner Alerting
+- [x] Task 3.6: Main Edge Function Orchestrator (`generate-article/index.ts`)
 
 ---
 
@@ -80,6 +87,6 @@ updated: "2026-10-21T12:45:00+05:30"
 |---|---|---|---|
 | 1. Foundation & Database | ✅ Complete | 7 | 7/7 |
 | 2. Public Portal & SEO | ✅ Complete | 6 | 6/6 |
-| 3. Auto-Publishing Pipeline | ⬜ Not Started | 6 | 0/6 |
+| 3. Auto-Publishing Pipeline | ✅ Complete | 6 | 6/6 |
 | 4. Admin Panel & MFA | ⬜ Not Started | 6 | 0/6 |
 | 5. Deployment & Launch | ⬜ Not Started | 5 | 0/5 |

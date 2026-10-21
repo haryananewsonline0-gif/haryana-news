@@ -33,8 +33,8 @@
 
 - [x] **Milestone 1: Project Scaffolding, Environment Config & Database Foundation** *(Completed)*
 - [x] **Milestone 2: Public Portal, Core Pages, Design System & SEO Engine** *(Completed)*
-- [ ] **Milestone 3: Auto-Publishing Pipeline, Edge Functions & External API Integrations** *(Next Phase)*
-- [ ] **Milestone 4: Secure Admin Panel, MFA, Turnstile & AI Editorial Chat**
+- [x] **Milestone 3: Auto-Publishing Pipeline, Edge Functions & External API Integrations** *(Completed)*
+- [ ] **Milestone 4: Secure Admin Panel, MFA, Turnstile & AI Editorial Chat** *(Next Phase)*
 - [ ] **Milestone 5: Deployment, Cron Job Configuration, End-to-End Testing & Security Audit**
 
 ---
@@ -436,7 +436,116 @@ Deliver a production-ready, ultra-fast Hindi news portal frontend with mobile-fi
 
 ## 6. Phase 2 Verification & Exit Criteria
 1. `npx astro check` passes with 0 errors.
-2. `npx astro build` completes successfully.
+2. `npx astro build` completes successfully in 5.22s.
 3. All routes accessible: `/`, `/news/[slug]`, `/category/[category]`, `/district/[district]`, `/search`, `/about`, `/contact`, `/privacy-policy`, `/disclaimer`, `/terms`, `/sitemap.xml`, `/google-news-sitemap.xml`, `/rss.xml`, `/robots.txt`.
-4. Git commit with `feat(milestone-2): ...`.
+4. Git commit: `3c9e986`.
+
+---
+
+## 7. Milestone 3: Detailed Atomic Tasks (Auto-Publishing Pipeline & Edge Functions)
+
+### Phase Objective
+Build the Supabase Edge Function `generate-article` (Deno runtime) triggered by cron-job.org with `x-cron-secret` authentication. Deliver real-data collectors (Weather, Mandi, Cricket, Fuel/Gold, Panchang, News RSS), Google Gemini API JSON narrative generation, 48h duplicate hash detection, editorial safety filters, Pollinations.ai + ImageKit upload with branded gradient card fallback, Green API WhatsApp broadcasts, and generation logging.
+
+---
+
+### [x] Task 3.1: External Data Fetchers (Real Numbers First — Zero Hallucination)
+- **Objective:** Implement modular data collectors in `supabase/functions/generate-article/data-fetchers/` ensuring numbers are never hallucinated.
+- **Target Files:**
+  - `supabase/functions/generate-article/data-fetchers/weather.ts`
+  - `supabase/functions/generate-article/data-fetchers/mandi.ts`
+  - `supabase/functions/generate-article/data-fetchers/cricket.ts`
+  - `supabase/functions/generate-article/data-fetchers/rates.ts`
+  - `supabase/functions/generate-article/data-fetchers/panchang.ts`
+  - `supabase/functions/generate-article/data-fetchers/rss.ts`
+- **Actions:**
+  1. `weather.ts`: Fetch Open-Meteo per district (Sirsa, Fatehabad, Hisar, Adampur, Ellenabad, Bhadra, Nohar).
+  2. `mandi.ts`: Query data.gov.in API with `DATA_GOV_API_KEY` for Haryana markets (Narma, Wheat, Mustard, Guar); fall back to `manual_data` if unreachable.
+  3. `cricket.ts`: Fetch CricAPI `currentMatches` with `CRICAPI_KEY`.
+  4. `rates.ts`: Fetch live fuel & gold rates with `manual_data` fallback.
+  5. `panchang.ts`: Compute Tithi, Nakshatra, Rahukaal, and Choghadiya in IST for Sirsa coordinates (29.53°N, 75.03°E).
+  6. `rss.ts`: Fetch public Hindi RSS feeds for government schemes, HSSC jobs, train/tech, and regional news.
+- **Verification:** Unit test data fetchers returning structured real payload.
+- **Success Criteria:** All fetchers return structured data or graceful fallback; never return fabricated numbers.
+
+---
+
+### [x] Task 3.2: Google Gemini AI Narrative Generation Engine
+- **Objective:** Interface with Google Gemini API using `GEMINI_MODEL` (default: `gemini-2.5-flash`), enforcing structured JSON output.
+- **Target Files:**
+  - `supabase/functions/generate-article/gemini.ts`
+- **Actions:**
+  1. Author Gemini client sending fetched REAL data + journalistic instructions.
+  2. Require structured JSON output: `{ title, summary, body_html, tags, seo_title, seo_description, image_prompt }`.
+  3. Enforce Hindi Devanagari, neutral journalistic tone, original wording, and source citations.
+  4. Validate model name; if invalid or fails, fail with clear error message.
+- **Verification:** Test Gemini JSON prompt format and validation.
+- **Success Criteria:** Gemini outputs valid parsed JSON adhering to the required schema.
+
+---
+
+### [x] Task 3.3: Content Hashing, Duplicate Detection & Sensitive Safety Filter
+- **Objective:** Prevent duplicate articles within 48h and hold sensitive topics in draft status.
+- **Target Files:**
+  - `supabase/functions/generate-article/duplicate.ts`
+  - `supabase/functions/generate-article/safety.ts`
+- **Actions:**
+  1. Compute SHA-256 `content_hash` of the generated article.
+  2. Query articles in last 48h; if duplicate hash or high title similarity, skip and log.
+  3. Safety filter: If topic touches crime naming individuals, religion/caste conflict, deaths, or political accusations, flag `status = 'draft'` and send alert to `OWNER_CHAT_ID` on WhatsApp. All other safe news set `status = 'published'`.
+- **Verification:** Test duplicate hash detection and regex/keyword safety rules.
+- **Success Criteria:** Duplicates skipped; sensitive drafts held and flagged.
+
+---
+
+### [x] Task 3.4: Thumbnail Engine (Pollinations.ai -> ImageKit & Branded Saffron/Green Card Fallback)
+- **Objective:** Fetch realistic 1200x630 thumbnail from Pollinations.ai, upload to ImageKit `/haryana-news/`, and fall back to branded SVG/card if needed.
+- **Target Files:**
+  - `supabase/functions/generate-article/image.ts`
+- **Actions:**
+  1. Build realistic generic prompt from article headline (scene only, no real persons, no fake events, no logos).
+  2. Fetch 1200x630 image from Pollinations.ai with 10s timeout.
+  3. Upload binary buffer to ImageKit API in folder `/haryana-news/` and obtain permanent ImageKit URL.
+  4. Fallback: If Pollinations fails or times out, generate branded template card (SVG/Canvas with headline text on saffron/green gradient) and upload that to ImageKit.
+- **Verification:** Test ImageKit upload and branded card fallback generator.
+- **Success Criteria:** DB receives only ImageKit URL; branded card fallback reliably generated on failure.
+
+---
+
+### [x] Task 3.5: Green API WhatsApp Broadcasting & Owner Alerting
+- **Objective:** Broadcast published articles to WhatsApp Group and alert owner on draft flags.
+- **Target Files:**
+  - `supabase/functions/generate-article/whatsapp.ts`
+- **Actions:**
+  1. Implement `sendWhatsAppMessage` using Green API `sendMessage` endpoint.
+  2. After article is published, broadcast to `WHATSAPP_GROUP_CHAT_ID`: `Title\n\nSummary\n\nRead more: URL`.
+  3. Add random delay between 3 and 8 seconds. Enforce max 1 message per article.
+  4. If article is held as draft by safety filter, notify `OWNER_CHAT_ID`.
+  5. Never fail the article if WhatsApp API fails; log failure in `generation_logs`.
+- **Verification:** Test Green API payload format and non-blocking error handling.
+- **Success Criteria:** WhatsApp messages sent with random delay; failures non-blocking.
+
+---
+
+### [x] Task 3.6: Main Edge Function Orchestrator (`generate-article/index.ts`)
+- **Objective:** Implement the complete Deno Edge Function entry point with `CRON_SECRET` timing-safe check and slot pipeline.
+- **Target Files:**
+  - `supabase/functions/generate-article/index.ts`
+  - `supabase/functions/generate-article/types.ts`
+- **Actions:**
+  1. Inspect `x-cron-secret` header and compare using timing-safe comparison (`crypto.subtle.timingSafeEqual`). Return 401 if unauthorized.
+  2. Read query param `?slot=<slot_key>`.
+  3. Check `settings.kill_switch`; if true, exit immediately and log `skipped`.
+  4. Execute pipeline: Fetch Data -> Gemini -> Duplicate Check -> Safety Check -> Thumbnail/ImageKit -> Insert Article -> WhatsApp -> Log in `generation_logs`.
+  5. Return JSON response `{ success: true, slot, article_id, status }`.
+- **Verification:** Test Edge Function syntax and pipeline orchestration.
+- **Success Criteria:** Edge function handles all 15 slots, secures via CRON_SECRET, and logs execution duration.
+
+---
+
+## 8. Phase 3 Verification & Exit Criteria
+1. Edge function files in `supabase/functions/generate-article/` compile cleanly with Deno/TypeScript.
+2. All 15 slot types supported with real data fetching or fallback.
+3. Git commit with `feat(milestone-3): ...`.
+
 

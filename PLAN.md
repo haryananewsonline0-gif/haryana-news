@@ -1,118 +1,122 @@
 ---
-phase: 2
-plan: "Public Portal, Core Pages & SEO Engine"
-wave: 2
+phase: 3
+plan: "Auto-Publishing Pipeline, Edge Functions & External API Integrations"
+wave: 3
 gap_closure: false
 ---
 
-# Plan 2: Public Portal, Core Pages & SEO Engine
+# Plan 3: Auto-Publishing Pipeline & Edge Functions
 
 ## Objective
-Build a rich, high-speed public news portal frontend with mobile-first responsive layout, Breaking News ticker, Homepage sections, Article detail pages with social sharing & AI image disclaimers, Category & District routing, AdSense-ready policy pages, NewsArticle JSON-LD, and dynamic XML/Google News sitemaps.
+Build the Supabase Edge Function `generate-article` (Deno runtime) triggered by cron-job.org with `x-cron-secret` timing-safe check. Ensure real data fetching first (Open-Meteo, data.gov.in, CricAPI, rates, panchang, Hindi RSS) with zero number hallucinations, Google Gemini API structured JSON generation, 48h duplicate hash check, sensitive safety filters, Pollinations.ai -> ImageKit thumbnail upload with branded saffron/green gradient fallback, Green API WhatsApp broadcasts with 3-8s random delay, and execution logging.
 
 ## Context
-- `PRD.md` — Section 5 (Milestone 2 Tasks)
-- `.gsd/SPEC.md` — Core specifications
-- `.gsd/ROADMAP.md` — Phase progression
+- `PRD.md` — Section 7 (Milestone 3 Tasks)
+- `.gsd/SPEC.md` — Core specifications (Sections 6 & 7)
+- `supabase/migrations/20261021000000_initial_schema.sql` — DB Schema
+- `supabase/migrations/20261021000002_seed_data.sql` — 15 Slots seed
 
 ---
 
 ## Tasks
 
 <task type="auto">
-  <name>Task 2.1: Homepage Layout, Breaking News & Section Grids</name>
+  <name>Task 3.1: External Data Fetchers (Real Numbers First)</name>
   <files>
-    src/utils/imagekit.ts
-    src/components/ArticleCard.astro
-    src/components/BreakingTicker.astro
-    src/pages/index.astro
+    supabase/functions/generate-article/types.ts
+    supabase/functions/generate-article/data-fetchers/weather.ts
+    supabase/functions/generate-article/data-fetchers/mandi.ts
+    supabase/functions/generate-article/data-fetchers/cricket.ts
+    supabase/functions/generate-article/data-fetchers/rates.ts
+    supabase/functions/generate-article/data-fetchers/panchang.ts
+    supabase/functions/generate-article/data-fetchers/rss.ts
   </files>
   <action>
-    1. Create ImageKit helper in src/utils/imagekit.ts for responsive WebP transformations.
-    2. Create src/components/ArticleCard.astro with hover animation, category badge, and IST formatted date.
-    3. Create src/components/BreakingTicker.astro with live red pulse and headline ticker.
-    4. Upgrade src/pages/index.astro with Hero story, Trending strip, Quick market rates bar, and Category news grids.
+    1. Define SlotPayload and data types in types.ts.
+    2. Build weather.ts fetching Open-Meteo for Sirsa, Fatehabad, Hisar, Adampur, Ellenabad, Bhadra, Nohar.
+    3. Build mandi.ts querying data.gov.in API with fallback to manual_data.
+    4. Build cricket.ts querying CricAPI currentMatches.
+    5. Build rates.ts for Gold 24K/22K, Silver, Petrol, Diesel, LPG with manual_data fallback.
+    6. Build panchang.ts computing Tithi, Nakshatra, Rahukaal, Choghadiya for Haryana coordinates.
+    7. Build rss.ts fetching public Hindi RSS news feeds for Govt schemes, Jobs, Tech, Regional news.
   </action>
-  <verify>npx astro check</verify>
-  <done>Home page renders rich responsive news portal sections</done>
+  <verify>Syntax and type check</verify>
+  <done>All data fetchers return real numbers or structured fallback</done>
 </task>
 
 <task type="auto">
-  <name>Task 2.2: Article Detail Page with Social Share, Breadcrumbs & AI Badge</name>
+  <name>Task 3.2: Google Gemini AI Narrative Generation Engine</name>
   <files>
-    src/components/Breadcrumbs.astro
-    src/components/ShareButtons.astro
-    src/pages/news/[slug].astro
+    supabase/functions/generate-article/gemini.ts
   </files>
   <action>
-    1. Create Breadcrumbs.astro with schema-friendly structure.
-    2. Create ShareButtons.astro with WhatsApp, Telegram, Facebook, X, and native Copy Link toast.
-    3. Create src/pages/news/[slug].astro with H1 headline, byline, IST publication timestamp, thumbnail with "प्रतीकात्मक तस्वीर (AI)" caption, body HTML, source credit, related news, and NewsArticle JSON-LD schema.
+    1. Implement callGeminiGenerateArticle sending real fetched data to Gemini API.
+    2. Read model from GEMINI_MODEL (default: gemini-2.5-flash). Fail with explicit error if model invalid.
+    3. Enforce response_format JSON schema: { title, summary, body_html, tags, seo_title, seo_description, image_prompt }.
+    4. Enforce Hindi Devanagari, neutral journalistic style, and source attribution.
   </action>
-  <verify>npx astro check</verify>
-  <done>Article route compiles cleanly with complete SEO schema and share buttons</done>
+  <verify>Validate Gemini API schema generation</verify>
+  <done>Gemini client generates validated structured JSON</done>
 </task>
 
 <task type="auto">
-  <name>Task 2.3: Category & District Routing</name>
+  <name>Task 3.3: Content Hashing, Duplicate Detection & Sensitive Safety Filter</name>
   <files>
-    src/pages/category/[category].astro
-    src/pages/district/[district].astro
+    supabase/functions/generate-article/duplicate.ts
+    supabase/functions/generate-article/safety.ts
   </files>
   <action>
-    1. Create category/[category].astro with category header, article grid, and fallback empty state.
-    2. Create district/[district].astro with district description, priority regional highlight, and local news feed.
+    1. Implement SHA-256 content hashing in duplicate.ts and 48h similarity check against Supabase articles table.
+    2. Implement safety filter in safety.ts checking for individual crime accusations, religion/caste conflict, deaths, political scandals.
+    3. If sensitive, flag status = 'draft' and notify owner; otherwise status = 'published'.
   </action>
-  <verify>npx astro check</verify>
-  <done>Category and District SSR routes handle requests cleanly</done>
+  <verify>Test hashing and safety filters</verify>
+  <done>Duplicates skipped; sensitive articles marked draft</done>
 </task>
 
 <task type="auto">
-  <name>Task 2.4: Search Engine & News Archive</name>
+  <name>Task 3.4: Thumbnail Engine (Pollinations.ai -> ImageKit & Branded Card Fallback)</name>
   <files>
-    src/pages/search.astro
+    supabase/functions/generate-article/image.ts
   </files>
   <action>
-    1. Create search.astro with input box and server-side ilike query filtering published articles.
+    1. Generate safe realistic scene prompt from headline (no real persons, no fake events, no logos).
+    2. Fetch 1200x630 image from Pollinations.ai with 10s timeout.
+    3. Upload binary buffer to ImageKit API in folder /haryana-news/ using ImageKit authentication keys.
+    4. If Pollinations fails/times out, generate branded SVG/PNG card (headline on saffron/green gradient with logo) and upload to ImageKit.
+    5. Return ImageKit URL.
   </action>
-  <verify>npx astro check</verify>
-  <done>Search page functions with query parameters</done>
+  <verify>Validate ImageKit upload logic and card generation</verify>
+  <done>ImageKit URL stored in DB; reliable gradient card fallback on failure</done>
 </task>
 
 <task type="auto">
-  <name>Task 2.5: AdSense-Ready Hindi Legal & Information Pages</name>
+  <name>Task 3.5: Green API WhatsApp Broadcasting & Owner Alerting</name>
   <files>
-    src/pages/about.astro
-    src/pages/contact.astro
-    src/pages/privacy-policy.astro
-    src/pages/disclaimer.astro
-    src/pages/terms.astro
+    supabase/functions/generate-article/whatsapp.ts
   </files>
   <action>
-    1. Create About Us (/about) in Hindi.
-    2. Create Contact Us (/contact) with contact email and address in Sirsa/Haryana.
-    3. Create Privacy Policy (/privacy-policy) for DPDP Act & Google AdSense compliance.
-    4. Create Disclaimer (/disclaimer) highlighting AI image symbolic nature and news credits.
-    5. Create Terms & Conditions (/terms).
+    1. Implement sendWhatsAppMessage using Green API sendMessage.
+    2. Broadcast published article to WHATSAPP_GROUP_CHAT_ID with random 3-8s delay.
+    3. If draft flagged by safety filter, send alert message to OWNER_CHAT_ID.
+    4. Non-blocking error handling: never fail article if WhatsApp fails.
   </action>
-  <verify>npx astro check</verify>
-  <done>All 5 AdSense-required policy pages created and linked</done>
+  <verify>Validate Green API payload and delay handling</verify>
+  <done>WhatsApp broadcast sends with random delay; failures logged non-blockingly</done>
 </task>
 
 <task type="auto">
-  <name>Task 2.6: SEO Engine — Dynamic Sitemaps, RSS & Robots.txt</name>
+  <name>Task 3.6: Main Edge Function Orchestrator</name>
   <files>
-    src/pages/robots.txt.ts
-    src/pages/sitemap.xml.ts
-    src/pages/google-news-sitemap.xml.ts
-    src/pages/rss.xml.ts
+    supabase/functions/generate-article/index.ts
   </files>
   <action>
-    1. Implement robots.txt.ts blocking /admin, allowing /, and pointing to sitemaps.
-    2. Implement sitemap.xml.ts with all published articles, categories, and static pages.
-    3. Implement google-news-sitemap.xml.ts filtering articles from the last 48 hours with news tags.
-    4. Implement rss.xml.ts generating valid RSS 2.0 feed with Hindi metadata.
+    1. Handle POST/GET ?slot=<slot_key>.
+    2. Timing-safe comparison of x-cron-secret header with CRON_SECRET. Return 401 if unauthorized.
+    3. Check settings.kill_switch.
+    4. Route slot to data fetcher -> Gemini narrative -> Duplicate check -> Safety filter -> Thumbnail/ImageKit -> Insert article -> WhatsApp -> Generation log.
+    5. Return JSON execution result.
   </action>
-  <verify>npx astro build</verify>
-  <done>All SEO syndication endpoints respond with valid XML/text</done>
+  <verify>Test complete Edge Function execution flow</verify>
+  <done>Edge function orchestrates complete pipeline for all 15 slots</done>
 </task>
