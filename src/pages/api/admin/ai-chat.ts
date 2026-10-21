@@ -30,7 +30,7 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
     );
   }
 
-  const modelName = runtimeEnv?.GEMINI_MODEL || import.meta.env.GEMINI_MODEL || 'gemini-2.5-flash';
+  const modelName = runtimeEnv?.GEMINI_MODEL || import.meta.env.GEMINI_MODEL || 'gemini-3.5-flash-lite';
 
   try {
     const body = await request.json();

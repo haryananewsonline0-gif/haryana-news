@@ -185,6 +185,13 @@ export const prerender = false;
       return div.innerHTML;
     }
 
+    chatInput?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        chatForm?.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+      }
+    });
+
     chatForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const prompt = chatInput?.value.trim();

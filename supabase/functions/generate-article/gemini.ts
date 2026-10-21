@@ -13,8 +13,8 @@ export async function generateArticleWithGemini(
     throw new Error('GEMINI_API_KEY environment secret is missing in Supabase Edge Function.');
   }
 
-  // Model name from env, defaults to gemini-2.5-flash
-  const modelName = Deno.env.get('GEMINI_MODEL') || 'gemini-2.5-flash';
+  // Model name from env, defaults to gemini-3.5-flash-lite
+  const modelName = Deno.env.get('GEMINI_MODEL') || 'gemini-3.5-flash-lite';
 
   const systemInstruction = `
 You are a senior, highly respected Hindi news editor writing for 'Haryana News' (haryananews.online).
