@@ -3,9 +3,10 @@
 # ==============================================================================
 
 name = "haryana-news"
-pages_build_output_dir = "dist"
+main = "./dist/_worker.js/index.js"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
+assets = { directory = "./dist" }
 
 [vars]
 PUBLIC_SITE_URL = "https://haryananews.online"
