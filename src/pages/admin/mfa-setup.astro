@@ -4,6 +4,7 @@
 // Route: /admin/mfa-setup
 // ==============================================================================
 
+import '@/styles/global.css';
 import { verifyAdminSession } from '@/lib/auth/session';
 
 export const prerender = false;
@@ -30,7 +31,7 @@ if (!session.isAuthenticated || !session.isAdmin) {
       rel="stylesheet"
     />
   </head>
-  <body class="h-full font-devanagari text-slate-100 flex items-center justify-center p-4 selection:bg-brand-saffron selection:text-white">
+  <body class="min-h-screen bg-slate-950 font-devanagari text-slate-100 flex items-center justify-center p-4 selection:bg-brand-saffron selection:text-white">
     <div class="w-full max-w-lg">
       <div class="text-center mb-6">
         <h1 class="text-2xl font-bold tracking-tight text-white">Google Authenticator सेटअप</h1>

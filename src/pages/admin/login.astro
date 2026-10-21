@@ -4,6 +4,7 @@
 // Route: /admin/login (noindex, nofollow, protected)
 // ==============================================================================
 
+import '@/styles/global.css';
 import { verifyAdminSession } from '@/lib/auth/session';
 
 export const prerender = false;
@@ -23,6 +24,9 @@ const turnstileSiteKey =
   runtimeEnv?.PUBLIC_TURNSTILE_SITE_KEY ||
   import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ||
   '1x00000000000000000000AA'; // Cloudflare test key for local/preview
+
+const configuredAdminEmail =
+  (runtimeEnv?.ADMIN_EMAIL || import.meta.env.ADMIN_EMAIL || 'haryananewsonline0@gmail.com').trim();
 ---
 
 <!doctype html>
@@ -40,7 +44,7 @@ const turnstileSiteKey =
     />
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   </head>
-  <body class="h-full font-devanagari text-slate-100 flex items-center justify-center p-4 selection:bg-brand-saffron selection:text-white">
+  <body class="min-h-screen bg-slate-950 font-devanagari text-slate-100 flex items-center justify-center p-4 selection:bg-brand-saffron selection:text-white">
     <div class="w-full max-w-md">
       <!-- Logo & Brand Header -->
       <div class="text-center mb-8">
@@ -78,7 +82,8 @@ const turnstileSiteKey =
                 name="email"
                 required
                 autocomplete="email"
-                placeholder="admin@haryananews.online"
+                placeholder={configuredAdminEmail}
+                value={configuredAdminEmail}
                 class="w-full px-4 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-brand-saffron focus:ring-1 focus:ring-brand-saffron transition-all"
               />
             </div>

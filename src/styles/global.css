@@ -39,3 +39,57 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+@layer utilities {
+  .text-brand-saffron {
+    color: #FF9933;
+  }
+  .bg-brand-saffron {
+    background-color: #FF9933;
+  }
+  .border-brand-saffron {
+    border-color: #FF9933;
+  }
+  .from-brand-saffron {
+    --tw-gradient-from: #FF9933 var(--tw-gradient-from-position);
+    --tw-gradient-to: rgb(255 153 51 / 0) var(--tw-gradient-to-position);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+  .to-brand-saffron {
+    --tw-gradient-to: #FF9933 var(--tw-gradient-to-position);
+  }
+  .from-brand-green {
+    --tw-gradient-from: #138808 var(--tw-gradient-from-position);
+    --tw-gradient-to: rgb(19 136 8 / 0) var(--tw-gradient-to-position);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+  .to-brand-green {
+    --tw-gradient-to: #138808 var(--tw-gradient-to-position);
+  }
+  .text-brand-green {
+    color: #138808;
+  }
+  .bg-brand-green {
+    background-color: #138808;
+  }
+  .shadow-brand-saffron\/20 {
+    --tw-shadow-color: rgb(255 153 51 / 0.2);
+    --tw-shadow: var(--tw-shadow-colored);
+  }
+  .focus\:border-brand-saffron:focus {
+    border-color: #FF9933;
+  }
+  .focus\:ring-brand-saffron:focus {
+    --tw-ring-color: #FF9933;
+  }
+  .hover\:to-brand-saffron:hover {
+    --tw-gradient-to: #FF9933 var(--tw-gradient-to-position);
+  }
+  .hover\:bg-brand-saffron:hover {
+    background-color: #FF9933;
+  }
+  .selection\:bg-brand-saffron::selection {
+    background-color: #FF9933;
+  }
+}
+

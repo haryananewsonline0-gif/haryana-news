@@ -15,6 +15,8 @@ export default {
           600: '#EA580C',
           700: '#C2410C',
         },
+        'brand-saffron': '#FF9933',
+        'brand-green': '#138808',
         deepgreen: {
           DEFAULT: '#138808',
           50: '#F0FDF4',
@@ -28,6 +30,8 @@ export default {
       },
       fontFamily: {
         hindi: ['"Noto Sans Devanagari"', 'sans-serif'],
+        devanagari: ['"Noto Sans Devanagari"', 'sans-serif'],
+        outfit: ['"Outfit"', 'sans-serif'],
       },
     },
   },
