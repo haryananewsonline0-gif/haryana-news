@@ -1,6 +1,8 @@
 # Build output
 dist/
 .astro/
+supabase/.temp/
+
 
 # Dependencies
 node_modules/
