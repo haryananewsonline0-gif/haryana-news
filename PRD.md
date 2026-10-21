@@ -31,7 +31,7 @@
 
 ## 2. Project Milestones Roadmap
 
-- [ ] **Milestone 1: Project Scaffolding, Environment Config & Database Foundation** *(Current Active Phase)*
+- [x] **Milestone 1: Project Scaffolding, Environment Config & Database Foundation** *(Completed)*
 - [ ] **Milestone 2: Public Portal, Core Pages, Design System & SEO Engine**
 - [ ] **Milestone 3: Auto-Publishing Pipeline, Edge Functions & External API Integrations**
 - [ ] **Milestone 4: Secure Admin Panel, MFA, Turnstile & AI Editorial Chat**
@@ -46,7 +46,7 @@ Establish a clean Astro SSR repository with Tailwind CSS, Cloudflare Pages adapt
 
 ---
 
-### [ ] Task 1.1: Initialize Astro Project with SSR and Cloudflare Adapter
+### [x] Task 1.1: Initialize Astro Project with SSR and Cloudflare Adapter
 - **Objective:** Scaffold the Astro project inside repository root using SSR mode and `@astrojs/cloudflare`.
 - **Target Files:**
   - `package.json`
@@ -68,7 +68,7 @@ Establish a clean Astro SSR repository with Tailwind CSS, Cloudflare Pages adapt
 
 ---
 
-### [ ] Task 1.2: Environment Variable Specification & Security Boundaries
+### [x] Task 1.2: Environment Variable Specification & Security Boundaries
 - **Objective:** Create comprehensive `.env.example` and lock down `.gitignore` so secrets are never leaked.
 - **Target Files:**
   - `.env.example`
@@ -108,7 +108,7 @@ Establish a clean Astro SSR repository with Tailwind CSS, Cloudflare Pages adapt
 
 ---
 
-### [ ] Task 1.3: Supabase Migration — Database Schema Creation
+### [x] Task 1.3: Supabase Migration — Database Schema Creation
 - **Objective:** Author production-ready PostgreSQL migration containing all tables specified in Section 4 of the prompt.
 - **Target Files:**
   - `supabase/migrations/20261021000000_initial_schema.sql`
@@ -186,7 +186,7 @@ Establish a clean Astro SSR repository with Tailwind CSS, Cloudflare Pages adapt
 
 ---
 
-### [ ] Task 1.4: Supabase Migration — Row Level Security (RLS) & Policies
+### [x] Task 1.4: Supabase Migration — Row Level Security (RLS) & Policies
 - **Objective:** Implement zero-trust security policies via PostgreSQL Row Level Security (RLS).
 - **Target Files:**
   - `supabase/migrations/20261021000001_rls_policies.sql`
@@ -217,7 +217,7 @@ Establish a clean Astro SSR repository with Tailwind CSS, Cloudflare Pages adapt
 
 ---
 
-### [ ] Task 1.5: Supabase Migration — Seed Data (Slots Timetable & Initial Settings)
+### [x] Task 1.5: Supabase Migration — Seed Data (Slots Timetable & Initial Settings)
 - **Objective:** Seed the 15 IST slots timetable, initial news categories, default settings, and manual fallback rate schemas.
 - **Target Files:**
   - `supabase/migrations/20261021000002_seed_data.sql`
@@ -259,7 +259,7 @@ Establish a clean Astro SSR repository with Tailwind CSS, Cloudflare Pages adapt
 
 ---
 
-### [ ] Task 1.6: TypeScript Database Types & Supabase Client Layer
+### [x] Task 1.6: TypeScript Database Types & Supabase Client Layer
 - **Objective:** Generate strict TypeScript definitions for database models and create isomorphic Supabase client helpers.
 - **Target Files:**
   - `src/types/database.ts`
@@ -278,7 +278,7 @@ Establish a clean Astro SSR repository with Tailwind CSS, Cloudflare Pages adapt
 
 ---
 
-### [ ] Task 1.7: Design System Foundation & Haryana Theme Setup
+### [x] Task 1.7: Design System Foundation & Haryana Theme Setup
 - **Objective:** Set up Tailwind design tokens, Noto Sans Devanagari typography, and foundational layout shell.
 - **Target Files:**
   - `tailwind.config.mjs`
