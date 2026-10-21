@@ -6,6 +6,7 @@
 
 import type { APIRoute } from 'astro';
 import { verifyAdminSession } from '@/lib/auth/session';
+import { generateArticleLocally } from '@/lib/automation/direct-generator';
 
 export const prerender = false;
 
@@ -43,38 +44,64 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
       });
     }
 
-    // Call Edge Function
-    const functionUrl = `${supabaseUrl}/functions/v1/generate-article`;
-    const edgeRes = await fetch(functionUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-cron-secret': cronSecret,
-      },
-      body: JSON.stringify({
-        slot_id: slotId,
-        manual_trigger: true,
-      }),
-    });
+    // 1. Try remote Edge Function if available
+    let edgeSuccess = false;
+    let edgeData: unknown = null;
 
-    const edgeData = await edgeRes.json();
+    if (supabaseUrl && cronSecret) {
+      try {
+        const functionUrl = `${supabaseUrl}/functions/v1/generate-article`;
+        const edgeRes = await fetch(functionUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-cron-secret': cronSecret,
+          },
+          body: JSON.stringify({
+            slot: slotId,
+            manual_trigger: true,
+          }),
+        });
 
-    if (!edgeRes.ok) {
+        if (edgeRes.ok) {
+          edgeData = await edgeRes.json();
+          edgeSuccess = true;
+        }
+      } catch {
+        // Fall back to direct generator
+      }
+    }
+
+    if (edgeSuccess) {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: 'लेख सफलतापूर्वक जनरेट व संसाधित किया गया।',
+          data: edgeData,
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // 2. Direct Generator Engine (Gemini Flash + Supabase DB)
+    const localResult = await generateArticleLocally(slotId, runtimeEnv);
+
+    if (!localResult.success) {
       return new Response(
         JSON.stringify({
           success: false,
-          error: edgeData.error || 'एज फंक्शन निष्पादन विफल रहा।',
-          details: edgeData,
+          error: localResult.error || 'लेख जनरेट करने में त्रुटि',
         }),
-        { status: edgeRes.status, headers: { 'Content-Type': 'application/json' } }
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'लेख सफलतापूर्वक जनरेट व संसाधित किया गया।',
-        data: edgeData,
+        message: `लेख "${localResult.title}" सफलतापूर्वक प्रकाशित हुआ!`,
+        article_id: localResult.articleId,
+        slug: localResult.slug,
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     );

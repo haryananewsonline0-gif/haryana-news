@@ -40,17 +40,15 @@ export function getServiceSupabase(runtimeEnv?: Record<string, string | undefine
   const url =
     runtimeEnv?.SUPABASE_URL ||
     runtimeEnv?.PUBLIC_SUPABASE_URL ||
-    import.meta.env.SUPABASE_URL ||
-    import.meta.env.PUBLIC_SUPABASE_URL ||
+    import.meta.env?.SUPABASE_URL ||
+    import.meta.env?.PUBLIC_SUPABASE_URL ||
+    (typeof process !== 'undefined' ? (process.env?.SUPABASE_URL || process.env?.PUBLIC_SUPABASE_URL) : '') ||
     'https://placeholder.supabase.co';
 
   const serviceKey =
     runtimeEnv?.SUPABASE_SERVICE_ROLE_KEY ||
-    import.meta.env.SUPABASE_SERVICE_ROLE_KEY ||
-    runtimeEnv?.SUPABASE_ANON_KEY ||
-    runtimeEnv?.PUBLIC_SUPABASE_ANON_KEY ||
-    import.meta.env.SUPABASE_ANON_KEY ||
-    import.meta.env.PUBLIC_SUPABASE_ANON_KEY ||
+    import.meta.env?.SUPABASE_SERVICE_ROLE_KEY ||
+    (typeof process !== 'undefined' ? (process.env?.SUPABASE_SERVICE_ROLE_KEY || process.env?.SUPABASE_ANON_KEY) : '') ||
     'placeholder-service-key';
 
   return createClient<Database>(url, serviceKey, {
@@ -62,7 +60,7 @@ export function getServiceSupabase(runtimeEnv?: Record<string, string | undefine
 }
 
 
-import { FALLBACK_ARTICLES } from './fallback-articles';
+import { FALLBACK_ARTICLES } from './fallback-articles.ts';
 
 /**
  * Fetch published articles for homepage or category listing
