@@ -220,6 +220,24 @@ const DEFAULT_SLOTS: Slot[] = [
   },
 ];
 
+const SLOT_ICONS: Record<string, string> = {
+  rashifal: '🔮',
+  panchang_choghadiya: '🕉️',
+  weather_districtwise: '⛅',
+  today_in_history: '📜',
+  gold_silver: '🪙',
+  petrol_diesel_lpg: '⛽',
+  share_market: '📈',
+  govt_schemes: '🏛️',
+  govt_jobs: '💼',
+  train_bus_tech: '🚆',
+  mandi_bhav: '🌾',
+  cricket_sports: '🏏',
+  top10_news: '📰',
+  google_trends_india: '🔥',
+  regional_coverage: '📍',
+};
+
 let slots = (slotsData as Slot[]) || [];
 
 if (slots.length === 0) {
@@ -378,23 +396,118 @@ if (slots.length === 0) {
       </div>
     </div>
 
-    <!-- 15-Slot Publishing Timetable -->
+    <!-- 15-Slot Publishing Mission Control (Cards & Table) -->
     <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-      <div class="p-5 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div class="p-5 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h3 class="text-base font-bold text-white flex items-center gap-2">
-            <svg class="w-5 h-5 text-brand-saffron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            दैनिक 15-स्लॉट ऑटोमेशन समय-सारिणी (IST Timetable)
+            <span class="w-2.5 h-2.5 rounded-full bg-brand-saffron animate-pulse"></span>
+            दैनिक 15-स्लॉट ऑटोमेशन कंट्रोल (15 AI Slots)
           </h3>
           <p class="text-xs text-slate-400 mt-1">
-            प्रत्येक स्लॉट अपने निर्धारित समय पर cron-job.org द्वारा ट्रिगर होता है। आप किसी भी स्लॉट को तुरंत टेस्ट या रीजनरेट कर सकते हैं।
+            प्रत्येक स्लॉट अपने निर्धारित समय पर स्वचालित रूप से AI द्वारा पब्लिश होता है। किसी भी कार्ड के <strong class="text-brand-saffron">"AI से चलाएं"</strong> बटन पर क्लिक करके आप तुरंत नया लेख पोस्ट कर सकते हैं।
           </p>
+        </div>
+
+        <!-- View Switcher Tabs -->
+        <div class="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 shrink-0">
+          <button
+            id="tab-cards-btn"
+            type="button"
+            class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-brand-saffron text-white shadow transition-all cursor-pointer flex items-center gap-1.5"
+          >
+            <span>🎴</span>
+            <span>कार्ड ग्रिड (15 Cards)</span>
+          </button>
+          <button
+            id="tab-table-btn"
+            type="button"
+            class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition-all cursor-pointer flex items-center gap-1.5"
+          >
+            <span>📋</span>
+            <span>तालिका (Table)</span>
+          </button>
         </div>
       </div>
 
-      <div class="overflow-x-auto">
+      <!-- VIEW 1: 15 Visual Interactive Cards Grid (Default Active) -->
+      <div id="slots-cards-view" class="p-5">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {slots.map((slot, index) => {
+            const icon = SLOT_ICONS[slot.slot_key] || '📰';
+            return (
+              <div class="p-5 rounded-2xl bg-slate-950/70 border border-slate-800/80 hover:border-brand-saffron/40 hover:bg-slate-950 transition-all flex flex-col justify-between shadow-lg hover:shadow-brand-saffron/10 group relative overflow-hidden">
+                <div class="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-brand-saffron/30 to-transparent group-hover:via-brand-saffron transition-all"></div>
+                <div>
+                  <!-- Card Header: Time & Status -->
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 font-mono text-xs font-bold">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {slot.schedule_ist} IST
+                    </span>
+                    <span
+                      class={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
+                        slot.is_active
+                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                          : 'bg-slate-800 text-slate-500'
+                      }`}
+                    >
+                      <span class={`w-1.5 h-1.5 rounded-full ${slot.is_active ? 'bg-emerald-400' : 'bg-slate-500'}`}></span>
+                      {slot.is_active ? 'सक्रिय' : 'रोका गया'}
+                    </span>
+                  </div>
+
+                  <!-- Slot Title & Icon -->
+                  <h4 class="text-sm font-bold text-white flex items-center gap-2 mb-1.5 group-hover:text-brand-saffron transition-colors">
+                    <span class="text-lg shrink-0">{icon}</span>
+                    <span class="line-clamp-1">{slot.name}</span>
+                  </h4>
+
+                  <!-- Description -->
+                  <p class="text-xs text-slate-400 leading-relaxed line-clamp-2 mb-3">
+                    {slot.description || 'स्वचालित दैनिक समाचार स्लॉट'}
+                  </p>
+
+                  <div class="flex items-center justify-between text-[11px] text-slate-500 font-mono">
+                    <span>स्लॉट #{String(index + 1).padStart(2, '0')}</span>
+                    <span class="text-slate-400">{slot.slot_key}</span>
+                  </div>
+                </div>
+
+                <!-- Card Footer Action -->
+                <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2">
+                  <div class="text-[11px] text-slate-400 truncate max-w-[120px]">
+                    {slot.last_run_at ? (
+                      <span class="text-emerald-400">✅ आज पोस्ट हुआ</span>
+                    ) : (
+                      <span class="text-slate-500">शेड्यूल प्रतीक्षारत</span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    data-slot-id={slot.slot_key}
+                    class="trigger-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-brand-saffron to-amber-600 hover:from-amber-500 hover:to-brand-saffron text-white text-xs font-bold shadow-md shadow-brand-saffron/20 transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    <span class="btn-text">AI से चलाएं</span>
+                    <svg class="btn-spinner hidden animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <!-- VIEW 2: Detailed Table View (Toggleable) -->
+      <div id="slots-table-view" class="hidden overflow-x-auto">
         <table class="w-full text-left text-sm text-slate-300">
           <thead class="text-xs uppercase bg-slate-950/60 text-slate-400 border-b border-slate-800">
             <tr>
@@ -407,6 +520,7 @@ if (slots.length === 0) {
           </thead>
           <tbody class="divide-y divide-slate-800/60 font-normal">
             {slots.map((slot) => {
+              const icon = SLOT_ICONS[slot.slot_key] || '📰';
               return (
                 <tr class="hover:bg-slate-800/40 transition-colors">
                   <!-- Scheduled Time -->
@@ -416,7 +530,10 @@ if (slots.length === 0) {
 
                   <!-- Slot Key & Name -->
                   <td class="px-5 py-4 whitespace-nowrap">
-                    <div class="font-medium text-white">{slot.name}</div>
+                    <div class="font-medium text-white flex items-center gap-2">
+                      <span>{icon}</span>
+                      <span>{slot.name}</span>
+                    </div>
                     <div class="text-xs text-slate-400 font-mono">{slot.slot_key}</div>
                   </td>
 
@@ -451,7 +568,7 @@ if (slots.length === 0) {
                       <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                       </svg>
-                      <span class="btn-text">तुरंत चलाएं</span>
+                      <span class="btn-text">AI से चलाएं</span>
                       <svg class="btn-spinner hidden animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
@@ -555,10 +672,34 @@ if (slots.length === 0) {
           window.showAdminToast(`❌ त्रुटि: ${err.message}`, 'error');
         } finally {
           btn.disabled = false;
-          textEl.textContent = 'तुरंत चलाएं';
+          textEl.textContent = 'AI से चलाएं';
           spinEl.classList.add('hidden');
         }
       });
+    });
+
+    // View Switcher between Cards Grid and Table
+    const tabCardsBtn = document.getElementById('tab-cards-btn');
+    const tabTableBtn = document.getElementById('tab-table-btn');
+    const cardsView = document.getElementById('slots-cards-view');
+    const tableView = document.getElementById('slots-table-view');
+
+    tabCardsBtn?.addEventListener('click', () => {
+      cardsView?.classList.remove('hidden');
+      tableView?.classList.add('hidden');
+      tabCardsBtn.classList.add('bg-brand-saffron', 'text-white', 'shadow');
+      tabCardsBtn.classList.remove('text-slate-400');
+      tabTableBtn?.classList.remove('bg-brand-saffron', 'text-white', 'shadow');
+      tabTableBtn?.classList.add('text-slate-400');
+    });
+
+    tabTableBtn?.addEventListener('click', () => {
+      cardsView?.classList.add('hidden');
+      tableView?.classList.remove('hidden');
+      tabTableBtn.classList.add('bg-brand-saffron', 'text-white', 'shadow');
+      tabTableBtn.classList.remove('text-slate-400');
+      tabCardsBtn?.classList.remove('bg-brand-saffron', 'text-white', 'shadow');
+      tabCardsBtn?.classList.add('text-slate-400');
     });
   </script>
 </AdminLayout>
